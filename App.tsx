@@ -1,8 +1,10 @@
+import 'expo-dev-client';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { theme } from './src/core/theme';
+import { RevenueCatService } from './src/services/revenuecat';
 import * as Font from 'expo-font';
 import { 
   Outfit_400Regular,
@@ -31,6 +33,7 @@ export default function App() {
         InterMedium: Inter_500Medium,
         InterSemiBold: Inter_600SemiBold,
       });
+      await RevenueCatService.initialize();
       setFontsLoaded(true);
     }
     loadFonts();

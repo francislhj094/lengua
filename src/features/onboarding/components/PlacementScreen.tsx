@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '../../../core/theme';
 import { Button } from '../../../components/Button';
 import { Compass } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Props {
   onNext: () => void;
@@ -24,11 +25,11 @@ export const PlacementScreen: React.FC<Props> = ({ onNext }) => {
       <View style={styles.footer}>
         <Button 
           title="Start Assessment" 
-          onPress={onNext} // Skipping actual assessment for MVP
+          onPress={onNext} 
         />
         <Button 
           title="I'm a complete beginner" 
-          variant="ghost"
+          variant="outline"
           onPress={onNext} 
           style={{ marginTop: theme.spacing.md }}
         />
@@ -40,6 +41,7 @@ export const PlacementScreen: React.FC<Props> = ({ onNext }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.primaryDark,
   },
   content: {
     flex: 1,
@@ -58,24 +60,23 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.xl,
+    fontSize: 32,
     color: theme.colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: theme.spacing.md,
+    fontWeight: '900',
+    marginBottom: 12,
+    letterSpacing: -0.5,
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: theme.typography.sizes.md,
+    fontSize: 16,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    marginBottom: 32,
     lineHeight: 24,
-    paddingHorizontal: theme.spacing.md,
+    textAlign: 'center',
   },
   footer: {
     padding: theme.spacing.xl,
-    backgroundColor: theme.colors.primaryDark,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceDark,
+    paddingTop: 40,
   },
 });

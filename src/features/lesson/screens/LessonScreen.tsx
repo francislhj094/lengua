@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Dimensions } fr
 import { theme } from '../../../core/theme';
 import { useCourseStore } from '../../../store/useCourseStore';
 import { X } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, FadeInDown, FadeOutDown } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
@@ -97,11 +98,11 @@ export const LessonScreen = ({ route, navigation }: any) => {
             const showWrong = isChecking && isSelected && !isCorrect;
 
             let bgColor = theme.colors.surfaceDark;
-            let borderColor = 'rgba(255, 255, 255, 0.1)';
+            let borderColor = 'rgba(0, 0, 0, 0.1)';
             
             if (isSelected && !isChecking) {
-              bgColor = 'rgba(78, 205, 196, 0.1)';
-              borderColor = theme.colors.accentSecondary;
+              bgColor = 'rgba(193, 39, 45, 0.05)';
+              borderColor = theme.colors.accentPrimary;
             } else if (showCorrect) {
               bgColor = 'rgba(123, 198, 126, 0.2)';
               borderColor = theme.colors.success;
@@ -118,7 +119,10 @@ export const LessonScreen = ({ route, navigation }: any) => {
                 onPress={() => setSelectedOption(opt)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.optionText, isSelected && !isChecking && { color: theme.colors.accentSecondary }]}>
+                <Text style={[
+                  styles.optionText, 
+                  isSelected && !isChecking && { color: theme.colors.accentPrimary, fontWeight: '800' }
+                ]}>
                   {opt}
                 </Text>
               </TouchableOpacity>
@@ -154,11 +158,13 @@ export const LessonScreen = ({ route, navigation }: any) => {
             disabled={!selectedOption}
             onPress={handleCheck}
           >
-            <Text style={styles.checkButtonText}>Check</Text>
+            <Text style={[styles.checkButtonText, !selectedOption && { color: theme.colors.textSecondary }]}>
+              Check
+            </Text>
           </TouchableOpacity>
         </View>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
   );
 };
 
@@ -179,9 +185,9 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flex: 1,
-    height: 12,
-    backgroundColor: theme.colors.surfaceDark,
-    borderRadius: 6,
+    height: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
@@ -196,18 +202,20 @@ const styles = StyleSheet.create({
   },
   questionLabel: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.accentSecondary,
-    fontWeight: '700',
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    fontWeight: '800',
+    letterSpacing: 1,
     textTransform: 'uppercase',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   questionText: {
-    fontFamily: theme.typography.fonts.spanish,
-    fontSize: theme.typography.sizes.xl,
+    fontFamily: theme.typography.fonts.headline,
+    fontSize: 32,
     color: theme.colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: theme.spacing.xxl,
+    fontWeight: '900',
+    marginBottom: 32,
+    letterSpacing: -0.5,
   },
   optionsGrid: {
     gap: theme.spacing.md,
@@ -220,14 +228,12 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: theme.typography.sizes.lg,
+    fontSize: 18,
     color: theme.colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   bottomBar: {
     padding: theme.spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   checkButton: {
     backgroundColor: theme.colors.accentPrimary,
@@ -240,9 +246,9 @@ const styles = StyleSheet.create({
   },
   checkButtonText: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.lg,
-    color: theme.colors.textPrimary,
-    fontWeight: '700',
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   feedbackContainer: {
     padding: theme.spacing.xl,

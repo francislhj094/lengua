@@ -5,6 +5,7 @@ import { Button } from '../../../components/Button';
 import { OptionCard } from '../../../components/OptionCard';
 import { useOnboardingStore } from '../../../store/useOnboardingStore';
 import { Volume2 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Props {
   onNext: () => void;
@@ -60,25 +61,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.xxl,
+    fontSize: 32,
     color: theme.colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: theme.spacing.sm,
+    fontWeight: '900',
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: theme.typography.sizes.md,
+    fontSize: 16,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
     lineHeight: 24,
   },
   optionsContainer: {
-    gap: theme.spacing.md,
+    gap: 0,
   },
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: theme.spacing.xl,
-    backgroundColor: theme.colors.primaryDark,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceDark,
+    paddingTop: 40,
   },
 });

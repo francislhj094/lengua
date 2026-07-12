@@ -6,6 +6,7 @@ import { MainTabNavigator } from './MainTabNavigator';
 import { VocabScreen } from '../features/vocabulary/screens/VocabScreen';
 import { LessonScreen } from '../features/lesson/screens/LessonScreen';
 import { AuthScreen } from '../features/auth/screens/AuthScreen';
+import { theme } from '../core/theme';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -23,7 +24,7 @@ export const RootNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0F0F1A' },
+        contentStyle: { backgroundColor: theme.colors.primaryDark },
       }}
     >
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />

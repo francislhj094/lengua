@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { theme } from '../../../core/theme';
 import { useVocabStore, VocabCard } from '../../../store/useVocabStore';
+import { useOnboardingStore } from '../../../store/useOnboardingStore';
 import { ChevronLeft, Volume2, Info } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Speech from 'expo-speech';
 import Animated, { 
   useSharedValue, 
@@ -22,6 +24,8 @@ export const VocabScreen = ({ navigation }: any) => {
   // Animation values
   const flipValue = useSharedValue(0); // 0 = front, 1 = back
 
+  const { dialect } = useOnboardingStore();
+
   useEffect(() => {
     setDueCards(getDueCards());
   }, []);
@@ -35,7 +39,9 @@ export const VocabScreen = ({ navigation }: any) => {
 
   const playAudio = () => {
     if (currentCard) {
-      Speech.speak(currentCard.front, { language: 'es-ES', rate: 0.8 });
+      // Use Spain accent by default or if 'spain' selected, otherwise Mexican/LatAm accent
+      const langCode = dialect === 'latam' ? 'es-MX' : 'es-ES';
+      Speech.speak(currentCard.front, { language: langCode, rate: 0.8 });
     }
   };
 
@@ -164,7 +170,7 @@ export const VocabScreen = ({ navigation }: any) => {
           </Animated.View>
         )}
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
   );
 };
 
@@ -204,7 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
@@ -246,7 +252,7 @@ const styles = StyleSheet.create({
   contextBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,
     width: '100%',
@@ -268,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   revealButtonText: {
     fontFamily: theme.typography.fonts.headline,

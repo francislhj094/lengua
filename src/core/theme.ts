@@ -1,15 +1,16 @@
 export const theme = {
   colors: {
-    primaryDark: '#0F0F1A',
-    surfaceDark: '#1A1A2E',
-    accentPrimary: '#E8B059',
-    accentSecondary: '#4ECDC4',
-    textPrimary: '#F0EDE8',
-    textSecondary: '#8A8A9A',
-    error: '#E85D75',
-    success: '#7BC67E',
+    primaryDark: '#FFFFFF', // Main background is now pristine white
+    surfaceDark: '#F8F9FA', // Secondary background for cards/sections
+    accentPrimary: '#C1272D', // The brand red is now the absolute primary CTA
+    accentSecondary: '#E8B059', // Gold for highlights/streaks
+    textPrimary: '#1A1A1A', // Sharp dark text
+    textSecondary: '#666666',
+    error: '#FF3B30',
+    success: '#34C759',
     transparent: 'transparent',
     white: '#FFFFFF',
+    brandRed: '#C1272D',
   },
   typography: {
     fonts: {

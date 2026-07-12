@@ -4,17 +4,18 @@ import { theme } from '../../../core/theme';
 import { Button } from '../../../components/Button';
 import { OptionCard } from '../../../components/OptionCard';
 import { useOnboardingStore } from '../../../store/useOnboardingStore';
-import { Clock } from 'lucide-react-native';
+import { Clock, Timer, Flame, Zap } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Props {
   onComplete: () => void;
 }
 
 const COMMITMENTS = [
-  { id: 5, title: 'Casual', description: '5 min/day (1 lesson)' },
-  { id: 15, title: 'Regular', description: '15 min/day (2-3 lessons)' },
-  { id: 30, title: 'Dedicated', description: '30 min/day (4-5 lessons + conversation)' },
-  { id: 60, title: 'Intensive', description: '60+ min/day (full study session)' },
+  { id: 5, title: 'Casual', description: '5 min/day (1 lesson)', icon: Clock },
+  { id: 15, title: 'Regular', description: '15 min/day (2-3 lessons)', icon: Timer },
+  { id: 30, title: 'Dedicated', description: '30 min/day (4-5 lessons + conversation)', icon: Flame },
+  { id: 60, title: 'Intensive', description: '60+ min/day (full study session)', icon: Zap },
 ];
 
 export const CommitmentScreen: React.FC<Props> = ({ onComplete }) => {
@@ -29,22 +30,25 @@ export const CommitmentScreen: React.FC<Props> = ({ onComplete }) => {
         </Text>
         
         <View style={styles.optionsContainer}>
-          {COMMITMENTS.map((opt) => (
-            <OptionCard
-              key={opt.id}
-              title={opt.title}
-              description={opt.description}
-              icon={<Clock color={theme.colors.accentPrimary} />}
-              selected={dailyCommitment === opt.id}
-              onPress={() => setDailyCommitment(opt.id)}
-            />
-          ))}
+          {COMMITMENTS.map((opt) => {
+            const Icon = opt.icon;
+            return (
+              <OptionCard
+                key={opt.id}
+                title={opt.title}
+                description={opt.description}
+                icon={<Icon color={theme.colors.accentPrimary} size={24} />}
+                selected={dailyCommitment === opt.id}
+                onPress={() => setDailyCommitment(opt.id)}
+              />
+            );
+          })}
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <Button 
-          title="Complete Setup" 
+          title="Commit to my goal" 
           onPress={onComplete} 
           disabled={!dailyCommitment} 
         />
@@ -63,25 +67,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.xxl,
+    fontSize: 32,
     color: theme.colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: theme.spacing.sm,
+    fontWeight: '900',
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: theme.typography.sizes.md,
+    fontSize: 16,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
     lineHeight: 24,
   },
   optionsContainer: {
-    gap: theme.spacing.md,
+    gap: 0,
   },
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: theme.spacing.xl,
-    backgroundColor: theme.colors.primaryDark,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceDark,
+    paddingTop: 40,
   },
 });

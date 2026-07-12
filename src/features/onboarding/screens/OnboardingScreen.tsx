@@ -6,7 +6,8 @@ import { WelcomeGoalScreen } from '../components/WelcomeGoalScreen';
 import { DialectScreen } from '../components/DialectScreen';
 import { PlacementScreen } from '../components/PlacementScreen';
 import { CommitmentScreen } from '../components/CommitmentScreen';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
 export const OnboardingScreen = () => {
@@ -21,6 +22,12 @@ export const OnboardingScreen = () => {
   const prevStep = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
+
+  const progressStyle = useAnimatedStyle(() => {
+    return {
+      width: withTiming(`${((currentStep + 1) / 4) * 100}%`, { duration: 300 }),
+    };
+  });
 
   const renderStep = () => {
     switch (currentStep) {
@@ -49,17 +56,9 @@ export const OnboardingScreen = () => {
           <View style={styles.backButtonPlaceholder} />
         )}
         
-        {/* Progress Dots */}
-        <View style={styles.progressContainer}>
-          {[0, 1, 2, 3].map((step) => (
-            <View
-              key={step}
-              style={[
-                styles.dot,
-                currentStep >= step ? styles.dotActive : styles.dotInactive,
-              ]}
-            />
-          ))}
+        {/* Animated Progress Bar */}
+        <View style={styles.progressBarBackground}>
+          <Animated.View style={[styles.progressBarFill, progressStyle]} />
         </View>
         <View style={styles.backButtonPlaceholder} />
       </View>
@@ -98,20 +97,18 @@ const styles = StyleSheet.create({
   backButtonPlaceholder: {
     width: 32, // to balance the chevron left which is 24 + padding
   },
-  progressContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  progressBarBackground: {
+    flex: 1,
+    height: 8,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 4,
+    marginHorizontal: 16,
+    overflow: 'hidden',
   },
-  dot: {
-    width: 24,
-    height: 4,
-    borderRadius: 2,
-  },
-  dotActive: {
+  progressBarFill: {
+    height: '100%',
     backgroundColor: theme.colors.accentPrimary,
-  },
-  dotInactive: {
-    backgroundColor: theme.colors.surfaceDark,
+    borderRadius: 4,
   },
   contentContainer: {
     flex: 1,

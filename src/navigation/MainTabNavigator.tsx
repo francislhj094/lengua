@@ -2,13 +2,14 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../features/dashboard/screens/HomeScreen';
 import { CourseMapScreen } from '../features/course/screens/CourseMapScreen';
-import { Home, Map as MapIcon, User } from 'lucide-react-native';
+import { Home, Map as MapIcon, User, BarChart2 } from 'lucide-react-native';
 import { theme } from '../core/theme';
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
 import { ProfileScreen } from '../features/profile/screens/ProfileScreen';
+import { ProgressScreen } from '../features/progress/screens/ProgressScreen';
 
 export const MainTabNavigator = () => {
   return (
@@ -16,12 +17,13 @@ export const MainTabNavigator = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(15, 15, 26, 0.95)',
-          borderTopColor: 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderTopColor: 'rgba(0, 0, 0, 0.05)',
           position: 'absolute', // for glassmorphism feel
           height: 80,
-          paddingBottom: 24,
           paddingTop: 12,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+          elevation: 0,
         },
         tabBarActiveTintColor: theme.colors.accentPrimary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
@@ -46,6 +48,14 @@ export const MainTabNavigator = () => {
         options={{
           tabBarLabel: 'Learn',
           tabBarIcon: ({ color, size }) => <MapIcon color={color} size={size} />
+        }}
+      />
+      <Tab.Screen 
+        name="ProgressTab" 
+        component={ProgressScreen} 
+        options={{
+          tabBarLabel: 'Progress',
+          tabBarIcon: ({ color, size }) => <BarChart2 color={color} size={size} />
         }}
       />
       <Tab.Screen 

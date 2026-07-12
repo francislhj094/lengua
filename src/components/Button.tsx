@@ -40,9 +40,10 @@ export const Button: React.FC<ButtonProps> = ({
       case 'ghost':
         return { color: theme.colors.accentPrimary };
       case 'primary':
+        return { color: theme.colors.primaryDark, fontWeight: '700' };
       case 'secondary':
       default:
-        return { color: theme.colors.primaryDark, fontWeight: '700' };
+        return { color: theme.colors.textPrimary, fontWeight: '700' };
     }
   };
 
@@ -54,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.touchable, style]}>
         <LinearGradient
-          colors={[theme.colors.accentPrimary, '#E59C38']}
+          colors={['#D9383E', theme.colors.accentPrimary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}

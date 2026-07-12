@@ -4,6 +4,7 @@ import { theme } from '../../../core/theme';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useNavigation } from '@react-navigation/native';
 import { Settings, LogOut, CreditCard, ChevronRight } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { RevenueCatService } from '../../../services/revenuecat';
 
 export const ProfileScreen = () => {
@@ -22,52 +23,52 @@ export const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        <View style={styles.header}>
-          <Text style={styles.title}>Profile</Text>
-        </View>
-
-        <View style={styles.userInfoCard}>
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>{user?.displayName?.charAt(0) || 'L'}</Text>
-          </View>
-          <View style={styles.userInfoText}>
-            <Text style={styles.userName}>{user?.displayName || 'Learner'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'Premium Member'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           
-          <TouchableOpacity style={styles.menuItem} onPress={handleRestore}>
-            <View style={styles.menuItemLeft}>
-              <View style={[styles.iconBox, { backgroundColor: 'rgba(78, 205, 196, 0.1)' }]}>
-                <CreditCard color={theme.colors.accentSecondary} size={20} />
-              </View>
-              <Text style={styles.menuItemText}>Restore Purchases</Text>
-            </View>
-            <ChevronRight color={theme.colors.textSecondary} size={20} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <View style={[styles.iconBox, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}>
-                <Settings color={theme.colors.textPrimary} size={20} />
-              </View>
-              <Text style={styles.menuItemText}>Preferences</Text>
-            </View>
-            <ChevronRight color={theme.colors.textSecondary} size={20} />
-          </TouchableOpacity>
-        </View>
+          <View style={styles.header}>
+            <Text style={styles.title}>Profile</Text>
+          </View>
 
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <LogOut color={theme.colors.error} size={20} />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+          <View style={styles.userInfoCard}>
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>{user?.displayName?.charAt(0) || 'L'}</Text>
+            </View>
+            <View style={styles.userInfoText}>
+              <Text style={styles.userName}>{user?.displayName || 'Learner'}</Text>
+              <Text style={styles.email}>{user?.email || 'Premium Member'}</Text>
+            </View>
+          </View>
 
-      </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account</Text>
+            
+            <TouchableOpacity style={styles.menuItem} onPress={handleRestore}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconBox, { backgroundColor: 'rgba(78, 205, 196, 0.1)' }]}>
+                  <CreditCard color={theme.colors.accentSecondary} size={20} />
+                </View>
+                <Text style={styles.menuItemText}>Restore Purchases</Text>
+              </View>
+              <ChevronRight color={theme.colors.textSecondary} size={20} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconBox, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}>
+                  <Settings color={theme.colors.textPrimary} size={20} />
+                </View>
+                <Text style={styles.menuItemText}>Preferences</Text>
+              </View>
+              <ChevronRight color={theme.colors.textSecondary} size={20} />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+            <LogOut color={theme.colors.error} size={20} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+
+        </ScrollView>
     </SafeAreaView>
   );
 };
@@ -118,15 +119,17 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.lg,
+    fontSize: 24,
+    fontWeight: '800',
     color: theme.colors.textPrimary,
-    fontWeight: '700',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
-  userEmail: {
+  email: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: theme.typography.sizes.md,
+    fontSize: 14,
     color: theme.colors.textSecondary,
+    marginBottom: 16,
   },
   section: {
     marginBottom: theme.spacing.xxl,
@@ -142,11 +145,14 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     backgroundColor: theme.colors.surfaceDark,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.sm,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'space-between',
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -161,10 +167,12 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   menuItemText: {
-    fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.md,
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 16,
     color: theme.colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: '600',
+    marginLeft: 16,
+    flex: 1,
   },
   signOutButton: {
     flexDirection: 'row',

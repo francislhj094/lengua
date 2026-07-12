@@ -1,15 +1,10 @@
 {
   "expo": {
-    "name": "lengua",
+    "name": "Lengua: Learn Spanish",
     "slug": "lengua",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash-screen.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0F0F1A"
-    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,

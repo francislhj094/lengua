@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../../core/theme';
 import { useCourseStore, Lesson } from '../../../store/useCourseStore';
 import { BookOpen, Check, Lock, Play } from 'lucide-react-native';
@@ -60,8 +61,8 @@ export const CourseMapScreen = ({ navigation }: any) => {
         {units.map((unit, unitIndex) => (
           <View key={unit.id} style={styles.unitContainer}>
             <View style={styles.unitHeader}>
+              <Text style={styles.unitSubtitle}>Unit {unitIndex + 1}</Text>
               <Text style={styles.unitTitle}>{unit.title}</Text>
-              <Text style={styles.unitDesc}>{unit.description}</Text>
             </View>
             
             <View style={styles.pathContainer}>
@@ -69,7 +70,7 @@ export const CourseMapScreen = ({ navigation }: any) => {
             </View>
           </View>
         ))}
-      </ScrollView>
+        </ScrollView>
     </SafeAreaView>
   );
 };
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
   },
   headerTitle: {
     fontFamily: theme.typography.fonts.headline,
@@ -114,24 +115,28 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xxl,
   },
   unitHeader: {
-    marginBottom: theme.spacing.xl,
     backgroundColor: theme.colors.surfaceDark,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.accentPrimary,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  unitSubtitle: {
+    fontFamily: theme.typography.fonts.headline,
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
   },
   unitTitle: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.lg,
+    fontSize: 24,
     color: theme.colors.textPrimary,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  unitDesc: {
-    fontFamily: theme.typography.fonts.body,
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.textSecondary,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   pathContainer: {
     paddingHorizontal: theme.spacing.xl,
@@ -148,30 +153,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    shadowColor: theme.colors.accentPrimary,
+    borderWidth: 3,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  nodeCircleCompleted: {
-    backgroundColor: theme.colors.accentPrimary,
+  lessonNodeCompleted: {
+    backgroundColor: 'rgba(193, 39, 45, 0.15)',
+    borderColor: theme.colors.accentPrimary,
   },
-  nodeCircleActive: {
-    backgroundColor: theme.colors.success,
-    borderWidth: 4,
-    borderColor: 'rgba(123, 198, 126, 0.3)',
-  },
-  nodeCircleLocked: {
+  lessonNodeLocked: {
     backgroundColor: theme.colors.surfaceDark,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowOpacity: 0,
-    elevation: 0,
+    borderColor: 'rgba(0,0,0,0.05)',
+    opacity: 0.6,
   },
-  nodeTitle: {
-    fontFamily: theme.typography.fonts.headline,
-    fontSize: 13,
+  lessonNodeCurrent: {
+    backgroundColor: theme.colors.surfaceDark,
+    borderColor: theme.colors.accentPrimary,
+    shadowColor: theme.colors.accentPrimary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  nodeContent: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  lessonTitle: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 14,
     color: theme.colors.textPrimary,
     fontWeight: '600',
     textAlign: 'center',

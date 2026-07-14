@@ -6,11 +6,14 @@ import { Button } from '../../../components/Button';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import auth from '@react-native-firebase/auth';
+import { useUserStore } from '../../../store/useUserStore';
+import { RevenueCatService } from '../../../services/revenuecat';
 
 export const AuthScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const { setHasOnboarded } = useUserStore();
 
   const handleAuth = async () => {
     if (!email) return;
@@ -22,14 +25,21 @@ export const AuthScreen = ({ navigation }: any) => {
 
     try {
       try {
-        await auth().signInWithEmailAndPassword(email.trim(), password);
+        const userCredential = await auth().signInWithEmailAndPassword(email.trim(), password);
+        if (userCredential.user) {
+          await RevenueCatService.loginUser(userCredential.user.uid);
+        }
       } catch (signInError: any) {
         if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
-          await auth().createUserWithEmailAndPassword(email.trim(), password);
+          const userCredential = await auth().createUserWithEmailAndPassword(email.trim(), password);
+          if (userCredential.user) {
+            await RevenueCatService.loginUser(userCredential.user.uid);
+          }
         } else {
           throw signInError;
         }
       }
+      setHasOnboarded(true);
       navigation.replace('Paywall');
     } catch (error: any) {
       Alert.alert('Authentication Error', error.message);

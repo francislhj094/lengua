@@ -27,12 +27,6 @@ export const PlacementScreen: React.FC<Props> = ({ onNext }) => {
           title="Start Assessment" 
           onPress={onNext} 
         />
-        <Button 
-          title="I'm a complete beginner" 
-          variant="outline"
-          onPress={onNext} 
-          style={{ marginTop: theme.spacing.md }}
-        />
       </View>
     </View>
   );

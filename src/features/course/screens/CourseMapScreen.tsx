@@ -3,12 +3,24 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } fr
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../../core/theme';
 import { useCourseStore, Lesson } from '../../../store/useCourseStore';
-import { BookOpen, Check, Lock, Play } from 'lucide-react-native';
+import { BookOpen, Check, Lock, Play, Flame, Heart, Star } from 'lucide-react-native';
+import { useUserStore } from '../../../store/useUserStore';
 
 export const CourseMapScreen = ({ navigation }: any) => {
   const { level, units } = useCourseStore();
+  const { streak, hearts, xp, isPremium } = useUserStore();
 
   const handlePressLesson = (lesson: Lesson) => {
+    // Determine if lesson is premium (id >= 6)
+    const lessonNumMatch = lesson.id.match(/\d+/);
+    const lessonNum = lessonNumMatch ? parseInt(lessonNumMatch[0], 10) : 0;
+    const isPremiumLesson = lessonNum >= 6;
+
+    if (isPremiumLesson && !isPremium) {
+      navigation.navigate('Paywall');
+      return;
+    }
+
     if (lesson.status !== 'locked') {
       navigation.navigate('Lesson', { lessonId: lesson.id });
     }
@@ -29,14 +41,14 @@ export const CourseMapScreen = ({ navigation }: any) => {
           onPress={() => handlePressLesson(lesson)}
           style={[
             styles.nodeCircle,
-            isCompleted && styles.nodeCircleCompleted,
-            isUnlocked && styles.nodeCircleActive,
-            lesson.status === 'locked' && styles.nodeCircleLocked
+            isCompleted && styles.lessonNodeCompleted,
+            isUnlocked && styles.lessonNodeCurrent,
+            lesson.status === 'locked' && styles.lessonNodeLocked
           ]}
         >
-          {isCompleted && <Check color={theme.colors.primaryDark} size={24} />}
-          {isUnlocked && <Play color={theme.colors.primaryDark} size={24} style={{ marginLeft: 4 }} />}
-          {lesson.status === 'locked' && <Lock color={theme.colors.textSecondary} size={20} />}
+          {isCompleted && <Check color="#FFFFFF" size={32} strokeWidth={3} />}
+          {isUnlocked && <Play color={theme.colors.accentPrimary} size={32} strokeWidth={2.5} style={{ marginLeft: 4 }} />}
+          {lesson.status === 'locked' && <Lock color={theme.colors.textSecondary} size={24} strokeWidth={2} />}
         </TouchableOpacity>
         <Text style={[
           styles.nodeTitle,
@@ -51,9 +63,17 @@ export const CourseMapScreen = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Learning Path</Text>
-        <View style={styles.levelBadge}>
-          <Text style={styles.levelText}>CEFR {level}</Text>
+        <View style={styles.statContainer}>
+          <Flame color={theme.colors.accentSecondary} size={24} />
+          <Text style={styles.statText}>{streak}</Text>
+        </View>
+        <View style={styles.statContainer}>
+          <Star color="#F1C40F" size={24} />
+          <Text style={styles.statText}>{xp}</Text>
+        </View>
+        <View style={styles.statContainer}>
+          <Heart color="#E74C3C" size={24} fill="#E74C3C" />
+          <Text style={styles.statText}>{hearts}</Text>
         </View>
       </View>
 
@@ -62,7 +82,7 @@ export const CourseMapScreen = ({ navigation }: any) => {
           <View key={unit.id} style={styles.unitContainer}>
             <View style={styles.unitHeader}>
               <Text style={styles.unitSubtitle}>Unit {unitIndex + 1}</Text>
-              <Text style={styles.unitTitle}>{unit.title}</Text>
+              <Text style={styles.unitTitle}>{unit.title.split(': ')[1] || unit.title}</Text>
             </View>
             
             <View style={styles.pathContainer}>
@@ -88,6 +108,17 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  statContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: theme.typography.sizes.md,
+    color: theme.colors.textPrimary,
+    fontWeight: '600',
   },
   headerTitle: {
     fontFamily: theme.typography.fonts.headline,
@@ -140,54 +171,51 @@ const styles = StyleSheet.create({
   },
   pathContainer: {
     paddingHorizontal: theme.spacing.xl,
-    gap: theme.spacing.lg,
+    gap: 16,
   },
   nodeWrapper: {
     alignItems: 'center',
-    width: 100,
+    width: 120,
   },
   nodeCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 3,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderBottomWidth: 6,
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   lessonNodeCompleted: {
-    backgroundColor: 'rgba(193, 39, 45, 0.15)',
-    borderColor: theme.colors.accentPrimary,
+    backgroundColor: theme.colors.accentPrimary,
+    borderColor: '#B8262C', // Darker red for bottom 3D border
+    borderWidth: 2,
+    borderBottomWidth: 6,
   },
   lessonNodeLocked: {
     backgroundColor: theme.colors.surfaceDark,
     borderColor: 'rgba(0,0,0,0.05)',
-    opacity: 0.6,
+    borderWidth: 2,
+    borderBottomWidth: 4,
   },
   lessonNodeCurrent: {
-    backgroundColor: theme.colors.surfaceDark,
+    backgroundColor: '#FFFFFF',
     borderColor: theme.colors.accentPrimary,
-    shadowColor: theme.colors.accentPrimary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    borderWidth: 2,
+    borderBottomWidth: 6,
   },
   nodeContent: {
     alignItems: 'center',
     gap: 8,
   },
-  lessonTitle: {
-    fontFamily: theme.typography.fonts.body,
+  nodeTitle: {
+    fontFamily: theme.typography.fonts.headline,
     fontSize: 14,
     color: theme.colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: '800',
     textAlign: 'center',
   },
   nodeTitleLocked: {

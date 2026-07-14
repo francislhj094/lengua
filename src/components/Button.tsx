@@ -1,7 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { theme } from '../core/theme';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
 interface ButtonProps {
   title: string;
@@ -20,6 +22,25 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
   disabled = false,
 }) => {
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    if (!disabled) {
+      scale.value = withSpring(0.95, { damping: 12, stiffness: 200 });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!disabled) {
+      scale.value = withSpring(1, { damping: 12, stiffness: 200 });
+    }
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   const getContainerStyle = (): ViewStyle => {
     switch (variant) {
       case 'secondary':
@@ -53,28 +74,43 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (variant === 'primary' && !disabled) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.touchable, style]}>
-        <LinearGradient
-          colors={['#D9383E', theme.colors.accentPrimary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradient}
+      <Animated.View style={[styles.touchable, style, animatedStyle]}>
+        <Pressable
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
         >
-          {content}
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={['#D9383E', theme.colors.accentPrimary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradient}
+          >
+            {content}
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
     );
   }
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.8}
-      style={[styles.touchable, styles.baseButton, getContainerStyle(), disabled && styles.disabled, style]}
-    >
-      {content}
-    </TouchableOpacity>
+    <Animated.View style={[styles.touchable, style, animatedStyle]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled}
+        style={({ pressed }) => [
+          styles.baseButton,
+          getContainerStyle(),
+          disabled && styles.disabled,
+          pressed && !disabled && { opacity: 0.7 }
+        ]}
+      >
+        {content}
+      </Pressable>
+    </Animated.View>
   );
 };
 
@@ -99,6 +135,7 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: theme.typography.fonts.body,
     fontSize: theme.typography.sizes.md,
+    textAlign: 'center',
   },
   disabled: {
     opacity: 0.5,

@@ -1,6 +1,7 @@
 import 'expo-dev-client';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import * as Updates from 'expo-updates';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { theme } from './src/core/theme';
@@ -23,7 +24,19 @@ export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
-    async function loadFonts() {
+    async function loadFontsAndUpdates() {
+      try {
+        if (!__DEV__) {
+          const update = await Updates.checkForUpdateAsync();
+          if (update.isAvailable) {
+            await Updates.fetchUpdateAsync();
+            await Updates.reloadAsync();
+          }
+        }
+      } catch (e) {
+        console.log('OTA Update failed', e);
+      }
+
       await Font.loadAsync({
         Outfit: Outfit_400Regular,
         OutfitMedium: Outfit_500Medium,
@@ -36,7 +49,7 @@ export default function App() {
       await RevenueCatService.initialize();
       setFontsLoaded(true);
     }
-    loadFonts();
+    loadFontsAndUpdates();
   }, []);
 
   if (!fontsLoaded) {

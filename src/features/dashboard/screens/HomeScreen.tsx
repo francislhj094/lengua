@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
 import { theme } from '../../../core/theme';
 import { Flame, BookOpen, Target, Calendar, ArrowRight, Sparkles, BrainCircuit } from 'lucide-react-native';
@@ -6,10 +6,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCourseStore } from '../../../store/useCourseStore';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { NotificationService } from '../../../services/notifications';
 
 export const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { units, activeLessonId } = useCourseStore();
+
+  useEffect(() => {
+    NotificationService.requestPermissionsAsync().catch(console.error);
+  }, []);
 
   let activeUnit = units[0];
   let activeLesson = units[0].lessons[0];

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { zustandStorage } from './storage';
 
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1';
 
@@ -81,8 +83,10 @@ const REAL_CURRICULUM: Unit[] = [
   }
 ];
 
-export const useCourseStore = create<CourseState>((set) => ({
-  level: 'A1',
+export const useCourseStore = create<CourseState>()(
+  persist(
+    (set) => ({
+      level: 'A1',
   units: REAL_CURRICULUM,
   activeLessonId: 'l3',
   
@@ -123,4 +127,9 @@ export const useCourseStore = create<CourseState>((set) => ({
     const activeLessonId = useCourseStore.getState().activeLessonId;
     await FirebaseService.syncUserData(uid, { units, activeLessonId });
   }
-}));
+}),
+{
+  name: 'course-storage',
+  storage: createJSONStorage(() => zustandStorage),
+}
+));

@@ -62,4 +62,34 @@ export class RevenueCatService {
       return null;
     }
   }
+
+  static async loginUser(uid: string): Promise<void> {
+    try {
+      await Purchases.logIn(uid);
+    } catch (e) {
+      console.error('Error logging into RevenueCat:', e);
+    }
+  }
+
+  static async logout(): Promise<void> {
+    try {
+      await Purchases.logOut();
+    } catch (e) {
+      console.error('Error logging out of RevenueCat:', e);
+    }
+  }
+
+  static async manageSubscription(): Promise<void> {
+    try {
+      if (Platform.OS === 'ios') {
+        // Use RevenueCat's built-in manage subscriptions UI if available
+        await Purchases.showManageSubscriptions();
+      } else {
+        // Google Play handles it via the deep link below
+        await Purchases.showManageSubscriptions();
+      }
+    } catch (e) {
+      console.error('Error opening subscription management:', e);
+    }
+  }
 }

@@ -4,11 +4,12 @@ import { theme } from '../../../core/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Zap, BookOpen, Plane, Mic, Globe } from 'lucide-react-native';
 import { RevenueCatService } from '../../../services/revenuecat';
+import { useUserStore } from '../../../store/useUserStore';
 import Animated, { FadeInDown, FadeInUp, FadeIn, withRepeat, withTiming, useSharedValue, useAnimatedStyle, withSequence } from 'react-native-reanimated';
 
-const PACKAGES = [
-  { identifier: 'monthly', title: '1 Month', priceString: '$4.99', isPopular: false, period: '/mo', billingText: 'Billed monthly' },
-  { identifier: 'annual', title: '12 Months', priceString: '$2.50', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed $29.99 yearly' },
+const MOCK_PACKAGES = [
+  { identifier: 'monthly', title: '1 Month', priceString: '$4.99', isPopular: false, period: '/mo', billingText: 'Billed monthly', rcPackage: null },
+  { identifier: 'annual', title: '12 Months', priceString: '$2.50', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed $29.99 yearly', rcPackage: null },
 ];
 
 const FEATURES = [
@@ -19,14 +20,32 @@ const FEATURES = [
 ];
 
 export const PaywallScreen = ({ navigation }: any) => {
+  const [packages, setPackages] = useState<any[]>(MOCK_PACKAGES);
   const [selectedId, setSelectedId] = useState<string>('annual');
   const [isLoading, setIsLoading] = useState(false);
+  const { setPremium } = useUserStore();
   
   // Pulse animation for the CTA button
   const pulseScale = useSharedValue(1);
   
   useEffect(() => {
-    RevenueCatService.getOfferings().catch(console.error);
+    RevenueCatService.getOfferings().then((pkgs) => {
+      if (pkgs && pkgs.length > 0) {
+        const mapped = pkgs.map((p: any) => ({
+          identifier: p.identifier,
+          title: p.packageType === 'ANNUAL' ? '12 Months' : '1 Month',
+          priceString: p.product.priceString,
+          isPopular: p.packageType === 'ANNUAL',
+          period: '',
+          badge: 'SAVE 50%',
+          billingText: p.product.description || `Billed ${p.product.priceString}`,
+          rcPackage: p,
+        }));
+        setPackages(mapped);
+        const annual = mapped.find((m: any) => m.isPopular);
+        if (annual) setSelectedId(annual.identifier);
+      }
+    }).catch(console.error);
     
     // Start subtle pulse animation
     pulseScale.value = withRepeat(
@@ -45,10 +64,28 @@ export const PaywallScreen = ({ navigation }: any) => {
 
   const handlePurchase = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      navigation.replace('Main');
-    }, 1500);
+    const selectedPackage = packages.find(p => p.identifier === selectedId);
+    
+    if (selectedPackage && selectedPackage.rcPackage) {
+      try {
+        const customerInfo = await RevenueCatService.purchasePackage(selectedPackage.rcPackage);
+        if (customerInfo && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+          setPremium(true);
+          navigation.replace('Main');
+        }
+      } catch (e) {
+        console.log('Purchase failed', e);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Mock purchase for testing when no real keys are provided
+      setTimeout(() => {
+        setIsLoading(false);
+        setPremium(true);
+        navigation.replace('Main');
+      }, 1500);
+    }
   };
 
   const handleRestore = async () => {
@@ -56,10 +93,12 @@ export const PaywallScreen = ({ navigation }: any) => {
     try {
       const customerInfo = await RevenueCatService.restorePurchases();
       if (customerInfo && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+        setPremium(true);
         navigation.replace('Main');
       }
     } catch (e) {
       console.log('Restore failed, proceeding for testing');
+      setPremium(true); // Mock restore for testing
     } finally {
       setIsLoading(false);
       navigation.replace('Main');
@@ -108,7 +147,7 @@ export const PaywallScreen = ({ navigation }: any) => {
 
           {/* Pricing Cards */}
           <Animated.View entering={FadeInDown.duration(700).delay(300).springify()} style={styles.plansContainer}>
-            {PACKAGES.map((pkg) => {
+            {packages.map((pkg) => {
               const isSelected = selectedId === pkg.identifier;
               
               return (

@@ -9,14 +9,22 @@ import { Button } from '../../../components/Button';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export const ReviewTabScreen = () => {
-  const { weakWords, hearts } = useUserStore();
+  const { weakWords, hearts, isPremium, freeLessonsUsed, incrementFreeLessonsUsed } = useUserStore();
   const navigation = useNavigation<any>();
 
   const handleStartPractice = () => {
+    if (!isPremium && freeLessonsUsed >= 2) {
+      navigation.navigate('Paywall');
+      return;
+    }
+    if (!isPremium) {
+      incrementFreeLessonsUsed();
+    }
     navigation.navigate('Lesson', { reviewMode: true });
   };
 
-  const isQueueEmpty = weakWords.length === 0;
+  const safeWeakWords = weakWords || [];
+  const isQueueEmpty = safeWeakWords.length === 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,13 +53,13 @@ export const ReviewTabScreen = () => {
                 <Dumbbell color={theme.colors.accentPrimary} size={32} strokeWidth={2.5} />
               </View>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{weakWords.length} Pending</Text>
+                <Text style={styles.badgeText}>{safeWeakWords.length} Pending</Text>
               </View>
             </View>
             
             <Text style={styles.cardTitle}>Spaced Repetition</Text>
             <Text style={styles.cardSubtitle}>
-              Master the {weakWords.length} word{weakWords.length === 1 ? '' : 's'} you recently struggled with.
+              Master the {safeWeakWords.length} word{safeWeakWords.length === 1 ? '' : 's'} you recently struggled with.
             </Text>
 
             <View style={styles.rewardBox}>

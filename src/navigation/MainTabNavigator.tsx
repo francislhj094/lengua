@@ -9,7 +9,7 @@ import { View, Text, Platform, StyleSheet } from 'react-native';
 const Tab = createBottomTabNavigator();
 
 import { ProfileScreen } from '../features/profile/screens/ProfileScreen';
-import { ProgressScreen } from '../features/progress/screens/ProgressScreen';
+
 import { ReviewTabScreen } from '../features/review/screens/ReviewTabScreen';
 
 export const MainTabNavigator = () => {
@@ -61,14 +61,7 @@ export const MainTabNavigator = () => {
           tabBarIcon: ({ color, size }) => <Dumbbell color={color} size={size} />
         }}
       />
-      <Tab.Screen 
-        name="ProgressTab" 
-        component={ProgressScreen} 
-        options={{
-          tabBarLabel: 'Progress',
-          tabBarIcon: ({ color, size }) => <BarChart2 color={color} size={size} />
-        }}
-      />
+
       <Tab.Screen 
         name="ProfileTab" 
         component={ProfileScreen} 

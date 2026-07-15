@@ -8,20 +8,18 @@ import { useUserStore } from '../../../store/useUserStore';
 
 export const CourseMapScreen = ({ navigation }: any) => {
   const { level, units } = useCourseStore();
-  const { streak, hearts, xp, isPremium } = useUserStore();
+  const { streak, hearts, xp, isPremium, freeLessonsUsed, incrementFreeLessonsUsed } = useUserStore();
 
   const handlePressLesson = (lesson: Lesson) => {
-    // Determine if lesson is premium (id >= 6)
-    const lessonNumMatch = lesson.id.match(/\d+/);
-    const lessonNum = lessonNumMatch ? parseInt(lessonNumMatch[0], 10) : 0;
-    const isPremiumLesson = lessonNum >= 6;
-
-    if (isPremiumLesson && !isPremium) {
+    if (!isPremium && freeLessonsUsed >= 2) {
       navigation.navigate('Paywall');
       return;
     }
 
     if (lesson.status !== 'locked') {
+      if (!isPremium) {
+        incrementFreeLessonsUsed();
+      }
       navigation.navigate('Lesson', { lessonId: lesson.id });
     }
   };

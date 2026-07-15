@@ -30,55 +30,708 @@ interface CourseState {
 
 const REAL_CURRICULUM: Unit[] = [
   {
-    id: 'unit_1',
-    title: 'Unit 1: The Basics',
-    description: 'Survival phrases, greetings, and introductions.',
-    lessons: [
-      { id: 'l1', title: 'Hola y Adiós', type: 'vocabulary', status: 'completed' },
-      { id: 'l2', title: 'Ser vs Estar (Intro)', type: 'grammar', status: 'completed' },
-      { id: 'l3', title: 'Ordering a Coffee', type: 'reading', status: 'unlocked' },
-      { id: 'l4', title: 'Numbers 1-100', type: 'vocabulary', status: 'locked' },
+    "id": "unit_1",
+    "title": "Unit 1: The Essentials",
+    "description": "Survival phrases, greetings, and basic communication.",
+    "lessons": [
+      {
+        "id": "l1",
+        "title": "Basic Greetings",
+        "type": "vocabulary",
+        "status": "completed"
+      },
+      {
+        "id": "l2",
+        "title": "Numbers 1-10",
+        "type": "vocabulary",
+        "status": "completed"
+      },
+      {
+        "id": "l3",
+        "title": "Common Phrases",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l4",
+        "title": "At the Restaurant",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l5",
+        "title": "Directions & Places",
+        "type": "vocabulary",
+        "status": "unlocked"
+      }
     ]
   },
   {
-    id: 'unit_2',
-    title: 'Unit 2: Daily Life',
-    description: 'Routines, family, and hobbies.',
-    lessons: [
-      { id: 'l5', title: 'My Family', type: 'vocabulary', status: 'locked' },
-      { id: 'l6', title: 'Present Tense Verbs (-ar)', type: 'grammar', status: 'locked' },
-      { id: 'l7', title: 'Daily Routine', type: 'reading', status: 'locked' },
-      { id: 'l8', title: 'Telling Time', type: 'vocabulary', status: 'locked' },
+    "id": "unit_2",
+    "title": "Unit 2: Practical Daily Vocabulary",
+    "description": "Vocabulary necessary for daily transactions and living situations.",
+    "lessons": [
+      {
+        "id": "l6",
+        "title": "Numbers & Prices",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l7",
+        "title": "Time & Days",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l8",
+        "title": "Family Members",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l9",
+        "title": "Colors & Descriptions",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l10",
+        "title": "Weather & Seasons",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l11",
+        "title": "Shopping Basics",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l12",
+        "title": "Transportation",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l13",
+        "title": "At the Hotel",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l14",
+        "title": "Body Parts & Health",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l15",
+        "title": "Food & Drinks",
+        "type": "vocabulary",
+        "status": "unlocked"
+      }
     ]
   },
   {
-    id: 'unit_3',
-    title: 'Unit 3: Food & Dining',
-    description: 'Restaurant vocabulary, expressing likes/dislikes.',
-    lessons: [
-      { id: 'l9', title: 'Food & Drinks', type: 'vocabulary', status: 'locked' },
-      { id: 'l10', title: 'Verbo Gustar', type: 'grammar', status: 'locked' },
-      { id: 'l11', title: 'At the Restaurant', type: 'reading', status: 'locked' },
+    "id": "unit_3",
+    "title": "Unit 3: Foundational Grammar & Culture",
+    "description": "Essential grammatical building blocks with Spanish cultural context.",
+    "lessons": [
+      {
+        "id": "l16",
+        "title": "Basic Verbs (-ar, -er, -ir)",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l17",
+        "title": "Adjectives & Gender",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l18",
+        "title": "Question Words",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l19",
+        "title": "Subject Pronouns",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l20",
+        "title": "Possessives",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l21",
+        "title": "Plazas & City Life",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l22",
+        "title": "Tapas Etiquette",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l23",
+        "title": "Siesta & Lifestyle",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l24",
+        "title": "Markets & Bargaining",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l25",
+        "title": "Making Friends",
+        "type": "listening",
+        "status": "unlocked"
+      }
     ]
   },
   {
-    id: 'unit_4',
-    title: 'Unit 4: Travel & Directions (A2)',
-    description: 'Navigating cities and booking hotels.',
-    lessons: [
-      { id: 'l12', title: 'Directions & Transport', type: 'vocabulary', status: 'locked' },
-      { id: 'l13', title: 'The Preterite (Past Tense)', type: 'grammar', status: 'locked' },
-      { id: 'l14', title: 'Checking into a Hotel', type: 'reading', status: 'locked' },
+    "id": "unit_4",
+    "title": "Unit 4: Intermediate Communication",
+    "description": "Focusing on expressing oneself, handling complex situations, and tenses.",
+    "lessons": [
+      {
+        "id": "l26",
+        "title": "Emergencies",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l27",
+        "title": "Phone Conversations",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l28",
+        "title": "Emotions & Feelings",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l29",
+        "title": "Hobbies & Interests",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l30",
+        "title": "Work & Occupation",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l31",
+        "title": "Simple Sentences",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l32",
+        "title": "Negation",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l33",
+        "title": "Past Tense (Preterite)",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l34",
+        "title": "Future Tense",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l35",
+        "title": "Comparisons",
+        "type": "grammar",
+        "status": "unlocked"
+      }
     ]
   },
   {
-    id: 'unit_5',
-    title: 'Unit 5: Health & Emergencies (A2)',
-    description: 'Body parts, symptoms, and the imperfect tense.',
-    lessons: [
-      { id: 'l15', title: 'Body Parts & Symptoms', type: 'vocabulary', status: 'locked' },
-      { id: 'l16', title: 'The Imperfect Tense', type: 'grammar', status: 'locked' },
-      { id: 'l17', title: 'At the Pharmacy', type: 'reading', status: 'locked' },
+    "id": "unit_5",
+    "title": "Unit 5: Spanish Culture & Living",
+    "description": "Cultural appreciation and logistics of staying in Spain longer-term.",
+    "lessons": [
+      {
+        "id": "l36",
+        "title": "Spanish Culture & Customs",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l37",
+        "title": "Festivals (La Tomatina, Fallas)",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l38",
+        "title": "Geography of Spain",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l39",
+        "title": "Music & Dance (Flamenco)",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l40",
+        "title": "Crafts & Arts",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l41",
+        "title": "At the Bank",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l42",
+        "title": "At the Post Office",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l43",
+        "title": "Renting an Apartment (Piso)",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l44",
+        "title": "Cooking & Recipes",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l45",
+        "title": "Sports & Football (La Liga)",
+        "type": "vocabulary",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_6",
+    "title": "Unit 6: Advanced Interpersonal Skills",
+    "description": "Focusing on polite interactions and wrapping up the starter segment.",
+    "lessons": [
+      {
+        "id": "l46",
+        "title": "Expressing Opinions",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l47",
+        "title": "Making Requests (Polite)",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l48",
+        "title": "Giving Directions",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l49",
+        "title": "Making Appointments",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l50",
+        "title": "Review: Starter Lessons",
+        "type": "grammar",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_7",
+    "title": "Unit 7: Professional & Formal Contexts",
+    "description": "Contrasting everyday street talk with formal language (Usted vs Tú).",
+    "lessons": [
+      {
+        "id": "l51",
+        "title": "Formal Spanish (Usted)",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l52",
+        "title": "Informal & Slang (Tío/Guay)",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l53",
+        "title": "Business Spanish",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l54",
+        "title": "Medical Vocabulary",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l55",
+        "title": "Legal Basics",
+        "type": "reading",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_8",
+    "title": "Unit 8: Advanced Grammar & Word Mechanics",
+    "description": "Deep dive into the mechanics of Spanish, building complex sentences.",
+    "lessons": [
+      {
+        "id": "l56",
+        "title": "Complex Sentences",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l57",
+        "title": "Passive Voice",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l58",
+        "title": "Conditional Sentences",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l59",
+        "title": "Relative Clauses (Que/Quien)",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l60",
+        "title": "Conjunctions",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l61",
+        "title": "Por vs. Para",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l62",
+        "title": "Ser vs. Estar (Advanced)",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l63",
+        "title": "The Subjunctive Mood",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l64",
+        "title": "Subjunctive with Doubt",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l65",
+        "title": "Idioms & Proverbs (Refranes)",
+        "type": "vocabulary",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_9",
+    "title": "Unit 9: Media, Entertainment & Literature",
+    "description": "Consuming native media and understanding cultural expression.",
+    "lessons": [
+      {
+        "id": "l66",
+        "title": "News & Media",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l67",
+        "title": "Social Media Spanish",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l68",
+        "title": "Spanish Cinema (Almodóvar)",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l69",
+        "title": "Literature (Cervantes)",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l70",
+        "title": "Humor & Jokes",
+        "type": "listening",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_10",
+    "title": "Unit 10: Linguistic Origins & Variations",
+    "description": "Fascinating look into how history shaped the Spanish language.",
+    "lessons": [
+      {
+        "id": "l71",
+        "title": "Regional Variations (Accents)",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l72",
+        "title": "Latin Roots",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l73",
+        "title": "Arabic Influences (Al-Andalus)",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l74",
+        "title": "Castellano vs. Andaluz",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l75",
+        "title": "Loanwords & Spanglish",
+        "type": "vocabulary",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_11",
+    "title": "Unit 11: Expat Business & Logistics",
+    "description": "Practical lessons for expats looking to settle in Spain.",
+    "lessons": [
+      {
+        "id": "l76",
+        "title": "Real Estate & Mortgages",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l77",
+        "title": "Immigration & NIE/Visas",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l78",
+        "title": "Starting a Business (Autónomo)",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l79",
+        "title": "Hiring & Employment",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l80",
+        "title": "Contracts & Agreements",
+        "type": "reading",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_12",
+    "title": "Unit 12: Advanced Expression & Speaking",
+    "description": "Formulating complex arguments, telling stories, and public speaking.",
+    "lessons": [
+      {
+        "id": "l81",
+        "title": "Advanced Dialogues 1",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l82",
+        "title": "Advanced Dialogues 2",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l83",
+        "title": "Debate & Discussion",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l84",
+        "title": "Storytelling Techniques",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l85",
+        "title": "Presentations & Pitches",
+        "type": "vocabulary",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_13",
+    "title": "Unit 13: Religion, History & Philosophy",
+    "description": "A deep dive into the historical and spiritual core of Spain.",
+    "lessons": [
+      {
+        "id": "l86",
+        "title": "Catholicism in Spain",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l87",
+        "title": "Semana Santa (Holy Week)",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l88",
+        "title": "The Spanish Civil War",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l89",
+        "title": "Traditions & Superstitions",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l90",
+        "title": "Philosophy & Worldview",
+        "type": "reading",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_14",
+    "title": "Unit 14: Traditional Life & Regions",
+    "description": "Vocabulary tied to traditional industries, regions, and heritage.",
+    "lessons": [
+      {
+        "id": "l91",
+        "title": "Agriculture & Olive Farming",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l92",
+        "title": "Coastal Life & Fishing",
+        "type": "reading",
+        "status": "unlocked"
+      },
+      {
+        "id": "l93",
+        "title": "Wine Country (Rioja)",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l94",
+        "title": "Moorish Architecture",
+        "type": "vocabulary",
+        "status": "unlocked"
+      },
+      {
+        "id": "l95",
+        "title": "Textiles & Fashion",
+        "type": "reading",
+        "status": "unlocked"
+      }
+    ]
+  },
+  {
+    "id": "unit_15",
+    "title": "Unit 15: Mastery & Final Assessments",
+    "description": "The culmination of the course, putting everything into practice.",
+    "lessons": [
+      {
+        "id": "l96",
+        "title": "Advanced Review 1",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l97",
+        "title": "Advanced Review 2",
+        "type": "grammar",
+        "status": "unlocked"
+      },
+      {
+        "id": "l98",
+        "title": "Fluency Practice 1",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l99",
+        "title": "Fluency Practice 2",
+        "type": "listening",
+        "status": "unlocked"
+      },
+      {
+        "id": "l100",
+        "title": "Graduation & Certificate",
+        "type": "reading",
+        "status": "unlocked"
+      }
     ]
   }
 ];
@@ -131,5 +784,6 @@ export const useCourseStore = create<CourseState>()(
 {
   name: 'course-storage',
   storage: createJSONStorage(() => zustandStorage),
+  version: 1,
 }
 ));

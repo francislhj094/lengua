@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Pressable, Alert } from 'react-native';
 import { theme } from '../../../core/theme';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useUserStore } from '../../../store/useUserStore';
+import { useCourseStore } from '../../../store/useCourseStore';
 import { useNavigation } from '@react-navigation/native';
-import { Settings, LogOut, CreditCard, ChevronRight, Crown, Globe } from 'lucide-react-native';
+import { Settings, LogOut, CreditCard, ChevronRight, Crown, Globe, Bug, RefreshCw } from 'lucide-react-native';
 import { RevenueCatService } from '../../../services/revenuecat';
+import auth from '@react-native-firebase/auth';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -52,18 +54,87 @@ const AnimatedMenuItem = ({ icon, title, subtitle, onPress, delay = 0, isPremium
 
 export const ProfileScreen = () => {
   const { user, setUser } = useAuthStore();
-  const { isPremium, dialect, setDialect } = useUserStore();
+  const { isPremium, dialect, setDialect, setPremium, setHasOnboarded, freeLessonsUsed } = useUserStore();
   const navigation = useNavigation<any>();
+
+  const resetFreeLessons = () => {
+    useUserStore.setState({ freeLessonsUsed: 0 });
+  };
+
+  const resetCourseData = () => {
+    useCourseStore.persist.clearStorage();
+    Alert.alert('Success', 'Course data reset. Please restart the app.');
+  };
+
+  const handleHardReset = () => {
+    Alert.alert(
+      'Reset Progress',
+      'Are you sure you want to wipe all your progress and start over? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Start Over', 
+          style: 'destructive', 
+          onPress: async () => {
+            useCourseStore.persist.clearStorage();
+            setHasOnboarded(false);
+            setUser(null);
+            await auth().signOut();
+            await RevenueCatService.logout();
+            navigation.replace('Onboarding');
+          } 
+        }
+      ]
+    );
+  };
 
   const handleSignOut = async () => {
     await RevenueCatService.logout();
     setUser(null);
-    navigation.replace('Auth');
+    setHasOnboarded(false);
+    navigation.replace('Landing');
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to permanently delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              if (auth().currentUser) {
+                await auth().currentUser?.delete();
+              }
+              await RevenueCatService.logout();
+              setUser(null);
+              setHasOnboarded(false);
+              navigation.replace('Landing');
+            } catch (e: any) {
+              if (e.code === 'auth/requires-recent-login') {
+                // Force a local wipe anyway because we use auto-generated passwords in the mock
+                await auth().signOut();
+                await RevenueCatService.logout();
+                setUser(null);
+                setHasOnboarded(false);
+                navigation.replace('Landing');
+                Alert.alert('Account Reset', 'Your local session and data have been wiped.');
+              } else {
+                Alert.alert('Error', e.message || 'Failed to delete account.');
+              }
+            }
+          } 
+        }
+      ]
+    );
   };
 
   const handleRestore = async () => {
     await RevenueCatService.restorePurchases();
-    alert('Purchases restored successfully!');
+    Alert.alert('Success', 'Purchases restored successfully!');
   };
 
   const handleManageSubscription = async () => {
@@ -120,14 +191,68 @@ export const ProfileScreen = () => {
               onPress={handleRestore}
               delay={500}
             />
+
+            <AnimatedMenuItem 
+              icon={<RefreshCw color={theme.colors.error} size={20} />}
+              title="Start Over"
+              subtitle="Reset progress and return to onboarding"
+              onPress={handleHardReset}
+              delay={550}
+            />
           </View>
 
-          <Animated.View entering={FadeInDown.duration(500).delay(600).springify()}>
-            <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-              <LogOut color={theme.colors.error} size={20} />
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          {__DEV__ && (
+            <View style={styles.section}>
+              <Animated.Text entering={FadeInDown.duration(500).delay(550).springify()} style={styles.sectionTitle}>
+                Developer Tools (Local Only)
+              </Animated.Text>
+              
+              <AnimatedMenuItem 
+                icon={<Bug color={theme.colors.accentPrimary} size={20} />}
+                title="Toggle Premium Status"
+                subtitle={`Currently: ${isPremium ? 'Premium' : 'Free'}`}
+                onPress={() => setPremium(!isPremium)}
+                delay={560}
+              />
+              <AnimatedMenuItem 
+                icon={<Bug color={theme.colors.accentPrimary} size={20} />}
+                title="Reset Course Data"
+                subtitle="Wipe all lesson progress"
+                onPress={resetCourseData}
+                delay={550}
+              />
+              <AnimatedMenuItem 
+                icon={<Bug color={theme.colors.accentPrimary} size={20} />}
+                title="Reset Free Lessons"
+                subtitle={`Currently used: ${freeLessonsUsed}/2`}
+                onPress={resetFreeLessons}
+                delay={565}
+              />
+              <AnimatedMenuItem 
+                icon={<Bug color={theme.colors.accentPrimary} size={20} />}
+                title="Reset Onboarding"
+                subtitle="Go back to welcome screen"
+                onPress={() => {
+                  setHasOnboarded(false);
+                  navigation.replace('Onboarding');
+                }}
+                delay={570}
+              />
+            </View>
+          )}
+
+          {user && (
+            <Animated.View entering={FadeInDown.duration(500).delay(600).springify()}>
+              <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+                <LogOut color={theme.colors.error} size={20} />
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
+                <Text style={styles.deleteAccountText}>Delete Account</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
 
         </ScrollView>
     </SafeAreaView>
@@ -250,8 +375,20 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: theme.typography.sizes.md,
+    fontSize: 16,
     color: theme.colors.error,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  deleteAccountButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+  },
+  deleteAccountText: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textDecorationLine: 'underline',
   },
 });

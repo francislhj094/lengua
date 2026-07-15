@@ -13,7 +13,7 @@ export class FirebaseService {
    */
   static async sendMagicLink(email: string): Promise<void> {
     const actionCodeSettings = {
-      url: 'https://lenguapp.page.link/login', // Must be configured in Firebase Dynamic Links
+      url: 'https://lengua.store/login', // Must be configured in Firebase Dynamic Links
       handleCodeInApp: true,
       iOS: {
         bundleId: 'com.launchfast.lengua',

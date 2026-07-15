@@ -5,12 +5,25 @@ import { Flame, BookOpen, Target, Calendar, ArrowRight, Sparkles, BrainCircuit }
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCourseStore } from '../../../store/useCourseStore';
+import { useUserStore } from '../../../store/useUserStore';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { NotificationService } from '../../../services/notifications';
 
 export const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { units, activeLessonId } = useCourseStore();
+  const { isPremium, freeLessonsUsed, incrementFreeLessonsUsed } = useUserStore();
+
+  const handleStartLesson = (lessonId: string) => {
+    if (!isPremium && freeLessonsUsed >= 2) {
+      navigation.navigate('Paywall');
+      return;
+    }
+    if (!isPremium) {
+      incrementFreeLessonsUsed();
+    }
+    navigation.navigate('Lesson', { lessonId });
+  };
 
   useEffect(() => {
     NotificationService.requestPermissionsAsync().catch(console.error);
@@ -57,7 +70,7 @@ export const HomeScreen = () => {
             
             <TouchableOpacity 
               activeOpacity={0.9} 
-              onPress={() => navigation.navigate('Lesson', { lessonId: activeLesson.id })}
+              onPress={() => handleStartLesson(activeLesson.id)}
               style={styles.heroCardContainer}
             >
               <LinearGradient

@@ -12,6 +12,7 @@ export interface UserGamificationState {
   hasOnboarded: boolean;
   dialect: 'spain' | 'latin_american';
   weakWords: any[];
+  freeLessonsUsed: number;
   setPremium: (status: boolean) => void;
   setHasOnboarded: (status: boolean) => void;
   setDialect: (dialect: 'spain' | 'latin_american') => void;
@@ -22,6 +23,7 @@ export interface UserGamificationState {
   addWeakWord: (exercise: any) => void;
   removeWeakWord: (id: string) => void;
   updateStreak: () => void;
+  incrementFreeLessonsUsed: () => void;
 }
 
 export const useUserStore = create<UserGamificationState>()(
@@ -36,6 +38,7 @@ export const useUserStore = create<UserGamificationState>()(
   hasOnboarded: false,
   dialect: 'spain',
   weakWords: [],
+  freeLessonsUsed: 0,
 
   setPremium: (status: boolean) => set({ isPremium: status }),
   setHasOnboarded: (status: boolean) => set({ hasOnboarded: status }),
@@ -61,6 +64,10 @@ export const useUserStore = create<UserGamificationState>()(
 
   removeWeakWord: (id: string) => set((state) => ({
     weakWords: state.weakWords.filter((w: any) => w.id !== id)
+  })),
+
+  incrementFreeLessonsUsed: () => set((state) => ({
+    freeLessonsUsed: state.freeLessonsUsed + 1
   })),
 
   updateStreak: () => {
@@ -94,5 +101,6 @@ export const useUserStore = create<UserGamificationState>()(
 {
   name: 'user-storage',
   storage: createJSONStorage(() => zustandStorage),
+  version: 1, // Cache bust to initialize weakWords correctly
 }
 ));

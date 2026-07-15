@@ -30,7 +30,12 @@ export const AuthScreen = ({ navigation }: any) => {
           await RevenueCatService.loginUser(userCredential.user.uid);
         }
       } catch (signInError: any) {
-        if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+        if (
+          signInError.code === 'auth/user-not-found' || 
+          signInError.code === 'auth/invalid-credential' || 
+          signInError.code === 'auth/invalid-login-credentials' ||
+          signInError.code === 'auth/wrong-password'
+        ) {
           const userCredential = await auth().createUserWithEmailAndPassword(email.trim(), password);
           if (userCredential.user) {
             await RevenueCatService.loginUser(userCredential.user.uid);
@@ -40,7 +45,10 @@ export const AuthScreen = ({ navigation }: any) => {
         }
       }
       setHasOnboarded(true);
-      navigation.replace('Paywall');
+      navigation.reset({
+        index: 1,
+        routes: [{ name: 'Main' }, { name: 'Paywall' }],
+      });
     } catch (error: any) {
       Alert.alert('Authentication Error', error.message);
     } finally {
@@ -119,7 +127,13 @@ export const AuthScreen = ({ navigation }: any) => {
 
               <TouchableOpacity 
                 style={styles.skipButton}
-                onPress={() => navigation.replace('Paywall')}
+                onPress={() => {
+                  setHasOnboarded(true);
+                  navigation.reset({
+                    index: 1,
+                    routes: [{ name: 'Main' }, { name: 'Paywall' }],
+                  });
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.skipButtonText}>Skip for now</Text>

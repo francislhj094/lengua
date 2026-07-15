@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Linking, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Linking, Platform, StatusBar, Alert } from 'react-native';
 import { theme } from '../../../core/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Zap, BookOpen, Plane, Mic, Globe } from 'lucide-react-native';
+import { X, Zap, BookOpen, Plane, Mic, Globe, CheckCircle2 } from 'lucide-react-native';
 import { RevenueCatService } from '../../../services/revenuecat';
 import { useUserStore } from '../../../store/useUserStore';
 import Animated, { FadeInDown, FadeInUp, FadeIn, withRepeat, withTiming, useSharedValue, useAnimatedStyle, withSequence } from 'react-native-reanimated';
+import auth from '@react-native-firebase/auth';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 const MOCK_PACKAGES = [
   { identifier: 'monthly', title: '1 Month', priceString: '$4.99', isPopular: false, period: '/mo', billingText: 'Billed monthly', rcPackage: null },
-  { identifier: 'annual', title: '12 Months', priceString: '$2.50', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed $29.99 yearly', rcPackage: null },
+  { identifier: 'annual', title: '12 Months', priceString: '$29.99', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed yearly', rcPackage: null },
 ];
 
 const FEATURES = [
@@ -38,7 +40,7 @@ export const PaywallScreen = ({ navigation }: any) => {
           isPopular: p.packageType === 'ANNUAL',
           period: '',
           badge: 'SAVE 50%',
-          billingText: p.product.description || `Billed ${p.product.priceString}`,
+          billingText: p.packageType === 'ANNUAL' ? 'Billed yearly' : 'Billed monthly',
           rcPackage: p,
         }));
         setPackages(mapped);
@@ -70,21 +72,30 @@ export const PaywallScreen = ({ navigation }: any) => {
       try {
         const customerInfo = await RevenueCatService.purchasePackage(selectedPackage.rcPackage);
         if (customerInfo && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+          // If the user skipped email, automatically register a ghost account for them so their purchase is saved to a cloud profile
+          if (!auth().currentUser) {
+            const userCredential = await auth().signInAnonymously();
+            if (userCredential.user) {
+              useAuthStore.getState().setUser({
+                uid: userCredential.user.uid,
+                email: null,
+                displayName: 'Anonymous Learner',
+              });
+              await RevenueCatService.loginUser(userCredential.user.uid);
+            }
+          }
           setPremium(true);
           navigation.replace('Main');
         }
-      } catch (e) {
+      } catch (e: any) {
         console.log('Purchase failed', e);
+        Alert.alert('Purchase Failed', e.message || 'We could not process your purchase at this time.');
       } finally {
         setIsLoading(false);
       }
     } else {
-      // Mock purchase for testing when no real keys are provided
-      setTimeout(() => {
-        setIsLoading(false);
-        setPremium(true);
-        navigation.replace('Main');
-      }, 1500);
+      setIsLoading(false);
+      Alert.alert('Error', 'Products failed to load. Please restart the app and try again.');
     }
   };
 
@@ -95,23 +106,26 @@ export const PaywallScreen = ({ navigation }: any) => {
       if (customerInfo && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
         setPremium(true);
         navigation.replace('Main');
+      } else {
+        Alert.alert('Restore Failed', 'No active subscription was found on this account.');
       }
-    } catch (e) {
-      console.log('Restore failed, proceeding for testing');
-      setPremium(true); // Mock restore for testing
+    } catch (e: any) {
+      console.log('Restore failed', e);
+      Alert.alert('Restore Failed', e.message || 'We could not restore your purchases at this time.');
     } finally {
       setIsLoading(false);
-      navigation.replace('Main');
     }
   };
 
-  const openTerms = () => Linking.openURL('https://launchfast.co');
+  const openTerms = () => Linking.openURL('https://lengua.store/terms');
+  const openPrivacy = () => Linking.openURL('https://lengua.store/privacy');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      {/* Absolute background element for a glowing top effect */}
+      {/* Premium Background Elements */}
       <View style={styles.backgroundGlow} />
+      <View style={styles.backgroundGlow2} />
       
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
@@ -174,35 +188,34 @@ export const PaywallScreen = ({ navigation }: any) => {
                       <Text style={styles.popularText}>{pkg.badge}</Text>
                     </LinearGradient>
                   )}
-                  <Text style={[styles.durationText, isSelected && styles.planTitleSelected]}>
-                    {pkg.title}
-                  </Text>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.priceText}>{pkg.priceString}</Text>
-                    <Text style={styles.periodText}>{pkg.period}</Text>
-                  </View>
-                  <Text style={[styles.billingText, isSelected && styles.billingTextSelected]}>{pkg.billingText}</Text>
-                  {isSelected && (
-                    <View style={styles.selectionDot}>
-                      <View style={styles.selectionInnerDot} />
+                    <Text style={[styles.durationText, isSelected && styles.planTitleSelected]}>
+                      {pkg.title}
+                    </Text>
+                    <View style={styles.priceRow}>
+                      <Text 
+                        style={[styles.priceText, isSelected && styles.priceTextSelected]} 
+                        numberOfLines={1} 
+                        adjustsFontSizeToFit
+                      >
+                        {pkg.priceString}
+                      </Text>
                     </View>
-                  )}
-                </TouchableOpacity>
+                    <Text style={[styles.billingText, isSelected && styles.billingTextSelected]}>{pkg.billingText}</Text>
+                    {isSelected && (
+                      <View style={styles.selectionCheck}>
+                        <CheckCircle2 color={theme.colors.accentPrimary} size={20} fill="#FFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
               );
             })}
           </Animated.View>
 
-          {/* Add some padding at the bottom of the scroll view so content isn't hidden by the sticky footer */}
-          <View style={{ height: 100 }} />
-
         </ScrollView>
 
-        {/* STICKY CTA FOOTER */}
+        {/* STICKY CTA FOOTER (Now true flexbox at bottom) */}
         <Animated.View entering={FadeInUp.duration(700).delay(450).springify()} style={styles.stickyFooter}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)', '#FFFFFF']}
-            style={styles.stickyFooterGradient}
-          />
+
           <View style={styles.stickyFooterContent}>
             <TouchableOpacity 
               activeOpacity={0.85} 
@@ -233,32 +246,41 @@ export const PaywallScreen = ({ navigation }: any) => {
               </TouchableOpacity>
               <Text style={styles.footerDot}> • </Text>
               <TouchableOpacity onPress={openTerms}>
-                <Text style={styles.footerLinkText}>Terms</Text>
+                <Text style={styles.footerLinkText}>Terms of Use (EULA)</Text>
               </TouchableOpacity>
               <Text style={styles.footerDot}> • </Text>
-              <TouchableOpacity onPress={openTerms}>
-                <Text style={styles.footerLinkText}>Privacy</Text>
+              <TouchableOpacity onPress={openPrivacy}>
+                <Text style={styles.footerLinkText}>Privacy Policy</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Animated.View>
       </SafeAreaView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   backgroundGlow: {
     position: 'absolute',
-    top: -150,
-    left: -50,
-    right: -50,
+    top: -200,
+    left: -100,
+    width: 600,
+    height: 600,
+    backgroundColor: 'rgba(193, 39, 45, 0.04)',
+    borderRadius: 300,
+  },
+  backgroundGlow2: {
+    position: 'absolute',
+    top: -100,
+    right: -100,
+    width: 400,
     height: 400,
-    backgroundColor: 'rgba(193, 39, 45, 0.03)',
+    backgroundColor: 'rgba(232, 176, 89, 0.05)',
     borderRadius: 200,
   },
   safeArea: {
@@ -267,11 +289,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? theme.spacing.md : theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? 8 : 16,
+    paddingBottom: 24,
+    justifyContent: 'space-between', // Spreads content nicely to remove ugly gaps
   },
   topRow: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: 4,
   },
   closeButton: {
     padding: 8,
@@ -281,46 +304,54 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 8,
   },
   title: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: 32,
+    fontSize: 28,
     color: theme.colors.textPrimary,
     fontWeight: '900',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: 16,
+    fontSize: 14,
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
     paddingHorizontal: theme.spacing.sm,
   },
   featuresContainer: {
     paddingHorizontal: 8,
-    marginBottom: 32,
+    marginBottom: 16,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 6,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
   iconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(52, 199, 89, 0.15)', // Success green tint
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
   featureText: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: 16,
+    fontSize: 14,
     color: theme.colors.textPrimary,
     fontWeight: '600',
     flex: 1,
@@ -328,36 +359,43 @@ const styles = StyleSheet.create({
   plansContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 0,
+    paddingHorizontal: 4,
   },
   planCard: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 12,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.08)',
-    borderBottomWidth: 4, // 3D Effect
+    borderColor: 'rgba(0,0,0,0.04)',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
-    overflow: 'visible',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
   planCardSelected: {
     borderColor: theme.colors.accentPrimary,
-    borderBottomWidth: 2, // Depressed 3D effect
-    transform: [{ translateY: 2 }],
+    backgroundColor: '#FFF9F9',
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    shadowColor: theme.colors.accentPrimary,
   },
   popularBadge: {
     position: 'absolute',
-    top: -14,
+    top: -12,
     alignSelf: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#FFFFFF', // Creates a cut-out effect over the border
-    shadowColor: '#FF416C',
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 0,
+    shadowColor: theme.colors.accentPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -372,8 +410,8 @@ const styles = StyleSheet.create({
   },
   durationText: {
     fontFamily: theme.typography.fonts.headline,
-    fontSize: 14,
-    color: theme.colors.textPrimary,
+    fontSize: 12,
+    color: theme.colors.textSecondary,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -384,64 +422,54 @@ const styles = StyleSheet.create({
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   priceText: {
     fontFamily: theme.typography.fonts.headline,
     fontSize: 28,
     color: theme.colors.textPrimary,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
+    textAlign: 'center',
   },
-  periodText: {
-    fontFamily: theme.typography.fonts.body,
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    fontWeight: '500',
+  priceTextSelected: {
+    color: theme.colors.accentPrimary,
   },
   billingText: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: 10,
+    fontSize: 12,
     color: theme.colors.textSecondary,
-    marginTop: 4,
+    marginTop: 8,
     textAlign: 'center',
+    fontWeight: '500',
   },
   billingTextSelected: {
-    color: 'rgba(232, 176, 89, 0.8)',
+    color: theme.colors.accentPrimary,
+    opacity: 0.9,
+    fontWeight: '600',
   },
-  selectionDot: {
+  selectionCheck: {
     position: 'absolute',
-    bottom: 16,
-    right: 16,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(232, 176, 89, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectionInnerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.accentPrimary,
+    top: 10,
+    right: 10,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   stickyFooter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: theme.spacing.xl,
-    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
-    paddingTop: 40,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+    paddingTop: 8,
     alignItems: 'center',
-  },
-  stickyFooterGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    backgroundColor: '#FAFAFA', // Matches container background
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.03)',
   },
   stickyFooterContent: {
     width: '100%',
@@ -457,8 +485,8 @@ const styles = StyleSheet.create({
   },
   mainButtonGradient: {
     flexDirection: 'row',
-    height: 60, // Taller button
-    borderRadius: 30, // Fully rounded
+    height: 54, // Compressed button
+    borderRadius: 27, // Fully rounded
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
@@ -473,7 +501,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fonts.body,
     fontSize: 12,
     color: theme.colors.textSecondary,
-    marginTop: 16,
+    marginTop: 12,
     marginBottom: 8,
     fontWeight: '500',
   },

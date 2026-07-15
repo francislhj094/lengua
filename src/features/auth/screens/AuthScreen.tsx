@@ -7,13 +7,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import auth from '@react-native-firebase/auth';
 import { useUserStore } from '../../../store/useUserStore';
+import { useAuthStore } from '../../../store/useAuthStore';
 import { RevenueCatService } from '../../../services/revenuecat';
 
 export const AuthScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const { setHasOnboarded } = useUserStore();
+  const { setHasOnboarded, setPremium } = useUserStore();
 
   const handleAuth = async () => {
     if (!email) return;
@@ -24,33 +25,40 @@ export const AuthScreen = ({ navigation }: any) => {
     const password = email.toLowerCase().trim() + '_LenguaAuth2026!';
 
     try {
-      try {
-        const userCredential = await auth().signInWithEmailAndPassword(email.trim(), password);
-        if (userCredential.user) {
-          await RevenueCatService.loginUser(userCredential.user.uid);
-        }
-      } catch (signInError: any) {
-        if (
-          signInError.code === 'auth/user-not-found' || 
-          signInError.code === 'auth/invalid-credential' || 
-          signInError.code === 'auth/invalid-login-credentials' ||
-          signInError.code === 'auth/wrong-password'
-        ) {
-          const userCredential = await auth().createUserWithEmailAndPassword(email.trim(), password);
-          if (userCredential.user) {
-            await RevenueCatService.loginUser(userCredential.user.uid);
-          }
-        } else {
-          throw signInError;
-        }
+      const userCredential = await auth().createUserWithEmailAndPassword(email.trim(), password);
+      if (userCredential.user) {
+        useAuthStore.getState().setUser({
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          displayName: userCredential.user.displayName,
+        });
+        await RevenueCatService.loginUser(userCredential.user.uid);
       }
+      
+      const isPremium = await RevenueCatService.checkPremiumStatus();
+      setPremium(isPremium);
       setHasOnboarded(true);
-      navigation.reset({
-        index: 1,
-        routes: [{ name: 'Main' }, { name: 'Paywall' }],
-      });
+      
+      if (isPremium) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+      } else {
+        navigation.reset({
+          index: 1,
+          routes: [{ name: 'Main' }, { name: 'Paywall' }],
+        });
+      }
     } catch (error: any) {
-      Alert.alert('Authentication Error', error.message);
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          'Account Exists', 
+          'This email is already registered. Please use another email.'
+        );
+      } else {
+        Alert.alert('Authentication Error', error.message);
+      }
     } finally {
       setIsLoading(false);
     }

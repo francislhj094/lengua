@@ -192,13 +192,6 @@ export const ProfileScreen = () => {
               delay={500}
             />
 
-            <AnimatedMenuItem 
-              icon={<RefreshCw color={theme.colors.error} size={20} />}
-              title="Start Over"
-              subtitle="Reset progress and return to onboarding"
-              onPress={handleHardReset}
-              delay={550}
-            />
           </View>
 
           {__DEV__ && (
@@ -207,6 +200,13 @@ export const ProfileScreen = () => {
                 Developer Tools (Local Only)
               </Animated.Text>
               
+              <AnimatedMenuItem 
+                icon={<RefreshCw color={theme.colors.error} size={20} />}
+                title="Start Over (Full Wipe)"
+                subtitle="Wipe state, logout, go to onboarding"
+                onPress={handleHardReset}
+                delay={555}
+              />
               <AnimatedMenuItem 
                 icon={<Bug color={theme.colors.accentPrimary} size={20} />}
                 title="Toggle Premium Status"

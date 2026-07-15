@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Lengua: Learn Spanish",
+    "name": "Lengua: Learn Spanish Daily",
     "slug": "lengua",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -20,6 +20,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.launchfast.lengua",
+      "buildNumber": "1",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

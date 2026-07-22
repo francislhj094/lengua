@@ -6,9 +6,7 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/8c6b3c21-257d-4f39-9909-753baa3d114f"
-    },
+    "updates": {},
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -44,7 +42,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "8c6b3c21-257d-4f39-9909-753baa3d114f"
+        "projectId": "85175db5-b945-4441-9824-43d85625c71b"
       }
     }
   }

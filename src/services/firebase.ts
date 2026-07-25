@@ -48,7 +48,7 @@ export class FirebaseService {
   static async syncUserData(uid: string, data: any): Promise<void> {
     try {
       await firestore().collection('users').doc(uid).set(data, { merge: true });
-      console.log(`[Firebase] Successfully synced data for user ${uid}`);
+      if (__DEV__) console.log(`[Firebase] Successfully synced data for user ${uid}`);
     } catch (error) {
       console.error(`[Firebase] Error syncing data for user ${uid}:`, error);
     }

@@ -72,17 +72,19 @@ export const ProfileScreen = () => {
       'Are you sure you want to wipe all your progress and start over? This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Start Over', 
-          style: 'destructive', 
+        {
+          text: 'Start Over',
+          style: 'destructive',
           onPress: async () => {
             useCourseStore.persist.clearStorage();
             setHasOnboarded(false);
             setUser(null);
-            await auth().signOut();
+            if (auth().currentUser) {
+              await auth().signOut();
+            }
             await RevenueCatService.logout();
             navigation.replace('Onboarding');
-          } 
+          }
         }
       ]
     );
@@ -116,7 +118,9 @@ export const ProfileScreen = () => {
             } catch (e: any) {
               if (e.code === 'auth/requires-recent-login') {
                 // Force a local wipe anyway because we use auto-generated passwords in the mock
-                await auth().signOut();
+                if (auth().currentUser) {
+                  await auth().signOut();
+                }
                 await RevenueCatService.logout();
                 setUser(null);
                 setHasOnboarded(false);

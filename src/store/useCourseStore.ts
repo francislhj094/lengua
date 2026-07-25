@@ -38,13 +38,13 @@ const REAL_CURRICULUM: Unit[] = [
         "id": "l1",
         "title": "Basic Greetings",
         "type": "vocabulary",
-        "status": "completed"
+        "status": "unlocked"
       },
       {
         "id": "l2",
         "title": "Numbers 1-10",
         "type": "vocabulary",
-        "status": "completed"
+        "status": "unlocked"
       },
       {
         "id": "l3",
@@ -741,7 +741,7 @@ export const useCourseStore = create<CourseState>()(
     (set) => ({
       level: 'A1',
   units: REAL_CURRICULUM,
-  activeLessonId: 'l3',
+  activeLessonId: 'l1',
   
   completeLesson: (lessonId) => {
     set((state) => {
@@ -784,6 +784,6 @@ export const useCourseStore = create<CourseState>()(
 {
   name: 'course-storage',
   storage: createJSONStorage(() => zustandStorage),
-  version: 1,
+  version: 3, // Bumped to apply unlocked changes
 }
 ));

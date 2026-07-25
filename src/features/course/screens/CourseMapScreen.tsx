@@ -71,7 +71,7 @@ export const CourseMapScreen = ({ navigation }: any) => {
         </View>
         <View style={styles.statContainer}>
           <Heart color="#E74C3C" size={24} fill="#E74C3C" />
-          <Text style={styles.statText}>{hearts}</Text>
+          <Text style={styles.statText}>{isPremium ? '∞' : hearts}</Text>
         </View>
       </View>
 

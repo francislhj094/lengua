@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Linking, Platform, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Linking, Platform, StatusBar, Alert, useWindowDimensions } from 'react-native';
 import { theme } from '../../../core/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Zap, BookOpen, Plane, Mic, Globe, CheckCircle2 } from 'lucide-react-native';
@@ -26,7 +26,9 @@ export const PaywallScreen = ({ navigation }: any) => {
   const [selectedId, setSelectedId] = useState<string>('annual');
   const [isLoading, setIsLoading] = useState(false);
   const { setPremium } = useUserStore();
-  
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+
   // Pulse animation for the CTA button
   const pulseScale = useSharedValue(1);
   
@@ -88,7 +90,7 @@ export const PaywallScreen = ({ navigation }: any) => {
           navigation.replace('Main');
         }
       } catch (e: any) {
-        console.log('Purchase failed', e);
+        console.error('Purchase failed', e);
         Alert.alert('Purchase Failed', e.message || 'We could not process your purchase at this time.');
       } finally {
         setIsLoading(false);
@@ -110,7 +112,7 @@ export const PaywallScreen = ({ navigation }: any) => {
         Alert.alert('Restore Failed', 'No active subscription was found on this account.');
       }
     } catch (e: any) {
-      console.log('Restore failed', e);
+      console.error('Restore failed', e);
       Alert.alert('Restore Failed', e.message || 'We could not restore your purchases at this time.');
     } finally {
       setIsLoading(false);
@@ -126,9 +128,16 @@ export const PaywallScreen = ({ navigation }: any) => {
       {/* Premium Background Elements */}
       <View style={styles.backgroundGlow} />
       <View style={styles.backgroundGlow2} />
-      
+
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            isTablet && styles.scrollContentTablet
+          ]}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
           
           {/* Top Bar */}
           <Animated.View entering={FadeIn.duration(400)} style={styles.topRow}>
@@ -214,9 +223,9 @@ export const PaywallScreen = ({ navigation }: any) => {
         </ScrollView>
 
         {/* STICKY CTA FOOTER (Now true flexbox at bottom) */}
-        <Animated.View entering={FadeInUp.duration(700).delay(450).springify()} style={styles.stickyFooter}>
+        <Animated.View entering={FadeInUp.duration(700).delay(450).springify()} style={[styles.stickyFooter, isTablet && styles.stickyFooterTablet]}>
 
-          <View style={styles.stickyFooterContent}>
+          <View style={[styles.stickyFooterContent, isTablet && styles.stickyFooterContentTablet]}>
             <TouchableOpacity 
               activeOpacity={0.85} 
               onPress={handlePurchase}
@@ -292,6 +301,11 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 8 : 16,
     paddingBottom: 24,
     justifyContent: 'space-between', // Spreads content nicely to remove ugly gaps
+  },
+  scrollContentTablet: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
   },
   topRow: {
     marginBottom: 4,
@@ -471,9 +485,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.03)',
   },
+  stickyFooterTablet: {
+    paddingHorizontal: 32,
+  },
   stickyFooterContent: {
     width: '100%',
     alignItems: 'center',
+  },
+  stickyFooterContentTablet: {
+    maxWidth: 600,
+    width: '100%',
   },
   mainButtonContainer: {
     width: '100%',

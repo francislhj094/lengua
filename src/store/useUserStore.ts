@@ -46,10 +46,15 @@ export const useUserStore = create<UserGamificationState>()(
 
   gainXp: (amount: number) => set((state) => ({ xp: state.xp + amount })),
 
-  loseHeart: () => set((state) => ({
-    hearts: Math.max(0, state.hearts - 1),
-    // Logic for setting nextHeartRegenTime could go here if implementing timers
-  })),
+  loseHeart: () => set((state) => {
+    // Premium users have unlimited hearts
+    if (state.isPremium) return state;
+
+    return {
+      hearts: Math.max(0, state.hearts - 1),
+      // Logic for setting nextHeartRegenTime could go here if implementing timers
+    };
+  }),
 
   refillHearts: () => set({ hearts: 5 }),
 

@@ -7,16 +7,16 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { theme } from './src/core/theme';
 import { RevenueCatService } from './src/services/revenuecat';
 import * as Font from 'expo-font';
-import { 
+import {
   Outfit_400Regular,
   Outfit_500Medium,
   Outfit_600SemiBold,
-  Outfit_700Bold 
+  Outfit_700Bold
 } from '@expo-google-fonts/outfit';
-import { 
-  Inter_400Regular, 
-  Inter_500Medium, 
-  Inter_600SemiBold 
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold
 } from '@expo-google-fonts/inter';
 import { StatusBar } from 'expo-status-bar';
 
@@ -26,6 +26,7 @@ export default function App() {
   useEffect(() => {
     async function loadFontsAndUpdates() {
       try {
+        // Only check for updates in production builds
         if (!__DEV__) {
           const update = await Updates.checkForUpdateAsync();
           if (update.isAvailable) {
@@ -34,19 +35,29 @@ export default function App() {
           }
         }
       } catch (e) {
-        console.log('OTA Update failed', e);
+        console.error('OTA Update failed', e);
       }
 
-      await Font.loadAsync({
-        Outfit: Outfit_400Regular,
-        OutfitMedium: Outfit_500Medium,
-        OutfitSemiBold: Outfit_600SemiBold,
-        OutfitBold: Outfit_700Bold,
-        Inter: Inter_400Regular,
-        InterMedium: Inter_500Medium,
-        InterSemiBold: Inter_600SemiBold,
-      });
-      await RevenueCatService.initialize();
+      try {
+        await Font.loadAsync({
+          Outfit: Outfit_400Regular,
+          OutfitMedium: Outfit_500Medium,
+          OutfitSemiBold: Outfit_600SemiBold,
+          OutfitBold: Outfit_700Bold,
+          Inter: Inter_400Regular,
+          InterMedium: Inter_500Medium,
+          InterSemiBold: Inter_600SemiBold,
+        });
+      } catch (e) {
+        console.error('Font loading failed', e);
+      }
+
+      try {
+        await RevenueCatService.initialize();
+      } catch (e) {
+        console.error('RevenueCat initialization failed', e);
+      }
+
       setFontsLoaded(true);
     }
     loadFontsAndUpdates();

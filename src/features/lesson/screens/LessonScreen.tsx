@@ -18,7 +18,7 @@ import { LESSON_DATA } from '../../../data/lessons';
 export const LessonScreen = ({ route, navigation }: any) => {
   const { lessonId, reviewMode } = route.params;
   const { completeLesson } = useCourseStore();
-  const { gainXp, loseHeart, updateStreak, hearts, weakWords, addWeakWord, removeWeakWord, restoreHeart } = useUserStore();
+  const { gainXp, loseHeart, updateStreak, hearts, weakWords, addWeakWord, removeWeakWord, restoreHeart, isPremium } = useUserStore();
   
   // In review mode, pull from weak words (max 5)
   const [exercises] = useState(
@@ -50,6 +50,9 @@ export const LessonScreen = ({ route, navigation }: any) => {
   });
 
   useEffect(() => {
+    // Premium users have unlimited hearts, skip the check
+    if (isPremium) return;
+
     if (hearts <= 0) {
       Alert.alert(
         "Out of Hearts! 💔",
@@ -57,7 +60,7 @@ export const LessonScreen = ({ route, navigation }: any) => {
         [{ text: "Quit Lesson", onPress: () => navigation.goBack() }]
       );
     }
-  }, [hearts]);
+  }, [hearts, isPremium]);
 
   const handleCheck = () => {
     if (!selectedOption) return;

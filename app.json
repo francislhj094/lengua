@@ -19,7 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.launchfast.lengua",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "entitlements": {
         "aps-environment": "production"
       },

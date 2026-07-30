@@ -8,7 +8,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import auth from '@react-native-firebase/auth';
 import { useUserStore } from '../../../store/useUserStore';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { RevenueCatService } from '../../../services/revenuecat';
+import { IAPService } from '../../../services/iap';
 
 export const AuthScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -32,10 +32,10 @@ export const AuthScreen = ({ navigation }: any) => {
           email: userCredential.user.email,
           displayName: userCredential.user.displayName,
         });
-        await RevenueCatService.loginUser(userCredential.user.uid);
+        await IAPService.loginUser(userCredential.user.uid);
       }
-      
-      const isPremium = await RevenueCatService.checkPremiumStatus();
+
+      const isPremium = await IAPService.checkPremiumStatus();
       setPremium(isPremium);
       setHasOnboarded(true);
       

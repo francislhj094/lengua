@@ -10,7 +10,7 @@ import { AuthScreen } from '../features/auth/screens/AuthScreen';
 import { theme } from '../core/theme';
 import { useUserStore } from '../store/useUserStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { RevenueCatService } from '../services/revenuecat';
+import { IAPService } from '../services/iap';
 import { AppState, AppStateStatus } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
@@ -33,18 +33,16 @@ export const RootNavigator = () => {
   React.useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        // TODO: Re-enable after app approval
         // App has come to the foreground! Re-verify premium status.
-        // const isNowPremium = await RevenueCatService.checkPremiumStatus();
-        // setPremium(isNowPremium);
+        const isNowPremium = await IAPService.checkPremiumStatus();
+        setPremium(isNowPremium);
       }
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
-    // TODO: Re-enable after app approval
     // Check once on mount as well
-    // RevenueCatService.checkPremiumStatus().then(setPremium);
+    IAPService.checkPremiumStatus().then(setPremium);
 
     const unsubscribeAuth = auth().onAuthStateChanged(user => {
       if (user) {
@@ -75,8 +73,7 @@ export const RootNavigator = () => {
       <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Auth" component={AuthScreen} />
-      {/* TODO: Re-enable after app approval */}
-      {/* <Stack.Screen name="Paywall" component={PaywallScreen} /> */}
+      <Stack.Screen name="Paywall" component={PaywallScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />
       <Stack.Screen name="Vocab" component={VocabScreen} />
       <Stack.Screen name="Lesson" component={LessonScreen} />

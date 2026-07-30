@@ -3,15 +3,15 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Lin
 import { theme } from '../../../core/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Zap, BookOpen, Plane, Mic, Globe, CheckCircle2 } from 'lucide-react-native';
-import { RevenueCatService } from '../../../services/revenuecat';
+import { IAPService, IAPPackage } from '../../../services/iap';
 import { useUserStore } from '../../../store/useUserStore';
 import Animated, { FadeInDown, FadeInUp, FadeIn, withRepeat, withTiming, useSharedValue, useAnimatedStyle, withSequence } from 'react-native-reanimated';
 import auth from '@react-native-firebase/auth';
 import { useAuthStore } from '../../../store/useAuthStore';
 
 const MOCK_PACKAGES = [
-  { identifier: 'monthly', title: '1 Month', priceString: '$4.99', isPopular: false, period: '/mo', billingText: 'Billed monthly', rcPackage: null },
-  { identifier: 'annual', title: '12 Months', priceString: '$29.99', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed yearly', rcPackage: null },
+  { identifier: 'monthly', title: '1 Month', priceString: '$4.99', isPopular: false, period: '/mo', billingText: 'Billed monthly', productId: 'lengua_monthly' },
+  { identifier: 'annual', title: '12 Months', priceString: '$29.99', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed yearly', productId: 'lengua_annual' },
 ];
 
 const FEATURES = [
@@ -22,7 +22,7 @@ const FEATURES = [
 ];
 
 export const PaywallScreen = ({ navigation }: any) => {
-  const [packages, setPackages] = useState<any[]>([]);
+  const [packages, setPackages] = useState<IAPPackage[]>([]);
   const [selectedId, setSelectedId] = useState<string>('annual');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
@@ -38,45 +38,29 @@ export const PaywallScreen = ({ navigation }: any) => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        console.log('[PaywallScreen] Starting to load RevenueCat offerings...');
-        const pkgs = await RevenueCatService.getOfferings();
+        console.log('[PaywallScreen] Loading IAP offerings...');
+        const pkgs = await IAPService.getOfferings();
         console.log('[PaywallScreen] Received packages:', pkgs?.length || 0);
 
         if (!pkgs || pkgs.length === 0) {
-          console.error('[PaywallScreen] No packages returned from RevenueCat');
+          console.error('[PaywallScreen] No packages returned from IAP');
           setIsLoadingProducts(false);
           setProductsLoadError('No products available');
-          setPackages(MOCK_PACKAGES); // Show mock packages for display only
+          setPackages(MOCK_PACKAGES);
           return;
         }
 
-        const mapped = pkgs.map((p: any) => {
-          const hasFreeTrial = p.product.introPrice !== null;
-          return {
-            identifier: p.identifier,
-            title: p.packageType === 'ANNUAL' ? '12 Months' : '1 Month',
-            priceString: p.product.priceString,
-            isPopular: p.packageType === 'ANNUAL',
-            period: '',
-            badge: 'SAVE 50%',
-            billingText: p.packageType === 'ANNUAL' ? 'Billed yearly' : 'Billed monthly',
-            freeTrialText: hasFreeTrial ? `7 days free, then ${p.product.priceString}` : null,
-            rcPackage: p,
-          };
-        });
-
-        setPackages(mapped);
-        const annual = mapped.find((m: any) => m.isPopular);
+        setPackages(pkgs);
+        const annual = pkgs.find((p: IAPPackage) => p.isPopular);
         if (annual) setSelectedId(annual.identifier);
         setIsLoadingProducts(false);
         setProductsLoadError(null);
         console.log('[PaywallScreen] Successfully loaded products');
       } catch (error: any) {
-        console.error('[PaywallScreen] Error loading RevenueCat offerings:', error);
-        console.error('[PaywallScreen] Error details:', JSON.stringify(error, null, 2));
+        console.error('[PaywallScreen] Error loading IAP offerings:', error);
         setIsLoadingProducts(false);
         setProductsLoadError(error?.message || 'Failed to load products');
-        setPackages(MOCK_PACKAGES); // Show mock packages for display only
+        setPackages(MOCK_PACKAGES);
       }
     };
 
@@ -109,7 +93,7 @@ export const PaywallScreen = ({ navigation }: any) => {
 
     const selectedPackage = packages.find(p => p.identifier === selectedId);
 
-    if (!selectedPackage?.rcPackage) {
+    if (!selectedPackage) {
       console.error('[PaywallScreen] Attempted purchase without valid package');
       Alert.alert(
         'Product Not Available',
@@ -121,39 +105,40 @@ export const PaywallScreen = ({ navigation }: any) => {
 
     setIsLoading(true);
 
-    if (selectedPackage && selectedPackage.rcPackage) {
-      try {
-        const customerInfo = await RevenueCatService.purchasePackage(selectedPackage.rcPackage);
-        if (customerInfo && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
-          // If the user skipped email, automatically register a ghost account for them so their purchase is saved to a cloud profile
-          if (!auth().currentUser) {
-            const userCredential = await auth().signInAnonymously();
-            if (userCredential.user) {
-              useAuthStore.getState().setUser({
-                uid: userCredential.user.uid,
-                email: null,
-                displayName: 'Anonymous Learner',
-              });
-              await RevenueCatService.loginUser(userCredential.user.uid);
-            }
+    try {
+      const result = await IAPService.purchasePackage(selectedPackage);
+
+      if (result.success && result.isPremium) {
+        // If the user skipped email, automatically register a ghost account for them so their purchase is saved to a cloud profile
+        if (!auth().currentUser) {
+          const userCredential = await auth().signInAnonymously();
+          if (userCredential.user) {
+            useAuthStore.getState().setUser({
+              uid: userCredential.user.uid,
+              email: null,
+              displayName: 'Anonymous Learner',
+            });
+            await IAPService.loginUser(userCredential.user.uid);
           }
-          setPremium(true);
-          navigation.replace('Main');
         }
-      } catch (e: any) {
-        console.error('Purchase failed', e);
-        Alert.alert('Purchase Failed', e.message || 'We could not process your purchase at this time.');
-      } finally {
-        setIsLoading(false);
+        setPremium(true);
+        navigation.replace('Main');
+      } else {
+        Alert.alert('Purchase Failed', result.error || 'We could not process your purchase at this time.');
       }
+    } catch (e: any) {
+      console.error('Purchase failed', e);
+      Alert.alert('Purchase Failed', e.message || 'We could not process your purchase at this time.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRestore = async () => {
     setIsLoading(true);
     try {
-      const customerInfo = await RevenueCatService.restorePurchases();
-      if (customerInfo && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+      const result = await IAPService.restorePurchases();
+      if (result.success && result.isPremium) {
         setPremium(true);
         navigation.replace('Main');
       } else {
@@ -225,6 +210,17 @@ export const PaywallScreen = ({ navigation }: any) => {
                   onPress={() => {
                     setIsLoadingProducts(true);
                     setProductsLoadError(null);
+                    const loadProducts = async () => {
+                      try {
+                        const pkgs = await IAPService.getOfferings();
+                        setPackages(pkgs);
+                        setIsLoadingProducts(false);
+                        setProductsLoadError(null);
+                      } catch (error: any) {
+                        setIsLoadingProducts(false);
+                        setProductsLoadError(error?.message || 'Failed to load products');
+                      }
+                    };
                     loadProducts();
                   }}
                   style={styles.retryButton}

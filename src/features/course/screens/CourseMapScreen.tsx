@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../../core/theme';
@@ -10,16 +10,25 @@ export const CourseMapScreen = ({ navigation }: any) => {
   const { level, units } = useCourseStore();
   const { streak, hearts, xp, isPremium, freeLessonsUsed, incrementFreeLessonsUsed } = useUserStore();
 
+  useEffect(() => {
+    console.log('[CourseMap] Screen mounted - freeLessonsUsed:', freeLessonsUsed, 'isPremium:', isPremium);
+  }, [freeLessonsUsed, isPremium]);
+
   const handlePressLesson = (lesson: Lesson) => {
-    // TODO: Re-enable after app approval
-    // if (!isPremium && freeLessonsUsed >= 2) {
-    //   navigation.navigate('Paywall');
-    //   return;
-    // }
+    console.log('[CourseMap] Lesson pressed:', lesson.id);
+    console.log('[CourseMap] isPremium:', isPremium);
+    console.log('[CourseMap] freeLessonsUsed:', freeLessonsUsed);
+
+    if (!isPremium && freeLessonsUsed >= 2) {
+      console.log('[CourseMap] Should show paywall - navigating...');
+      navigation.navigate('Paywall');
+      return;
+    }
 
     if (lesson.status !== 'locked') {
       if (!isPremium) {
         incrementFreeLessonsUsed();
+        console.log('[CourseMap] Incremented free lessons to:', freeLessonsUsed + 1);
       }
       navigation.navigate('Lesson', { lessonId: lesson.id });
     }

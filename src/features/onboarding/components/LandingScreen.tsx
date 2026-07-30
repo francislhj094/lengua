@@ -6,7 +6,7 @@ import { Sparkles, X, Mail } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
-import { RevenueCatService } from '../../../services/revenuecat';
+import { IAPService } from '../../../services/iap';
 import { useUserStore } from '../../../store/useUserStore';
 import { useAuthStore } from '../../../store/useAuthStore';
 
@@ -31,8 +31,8 @@ export const LandingScreen = () => {
           email: userCredential.user.email,
           displayName: userCredential.user.displayName,
         });
-        await RevenueCatService.loginUser(userCredential.user.uid);
-        const isPremium = await RevenueCatService.checkPremiumStatus();
+        await IAPService.loginUser(userCredential.user.uid);
+        const isPremium = await IAPService.checkPremiumStatus();
         setPremium(isPremium);
       }
       setHasOnboarded(true);
@@ -58,8 +58,8 @@ export const LandingScreen = () => {
               email: legacyCredential.user.email,
               displayName: legacyCredential.user.displayName,
             });
-            await RevenueCatService.loginUser(legacyCredential.user.uid);
-            const isPremium = await RevenueCatService.checkPremiumStatus();
+            await IAPService.loginUser(legacyCredential.user.uid);
+            const isPremium = await IAPService.checkPremiumStatus();
             setPremium(isPremium);
           }
           setHasOnboarded(true);

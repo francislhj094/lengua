@@ -6,7 +6,7 @@ import { useUserStore } from '../../../store/useUserStore';
 import { useCourseStore } from '../../../store/useCourseStore';
 import { useNavigation } from '@react-navigation/native';
 import { Settings, LogOut, CreditCard, ChevronRight, Crown, Globe, Bug, RefreshCw } from 'lucide-react-native';
-import { RevenueCatService } from '../../../services/revenuecat';
+import { IAPService } from '../../../services/iap';
 import auth from '@react-native-firebase/auth';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -59,6 +59,13 @@ export const ProfileScreen = () => {
 
   const resetFreeLessons = () => {
     useUserStore.setState({ freeLessonsUsed: 0 });
+    Alert.alert('Success', 'Free lessons counter reset to 0');
+  };
+
+  const forceCheckPremium = async () => {
+    const status = await IAPService.checkPremiumStatus();
+    setPremium(status);
+    Alert.alert('Premium Status Check', `Premium: ${status}\nNo active subscriptions found, set to Free.`);
   };
 
   const resetCourseData = () => {
@@ -82,8 +89,7 @@ export const ProfileScreen = () => {
             if (auth().currentUser) {
               await auth().signOut();
             }
-            // TODO: Re-enable after app approval
-            // await RevenueCatService.logout();
+            await IAPService.logout();
             navigation.replace('Onboarding');
           }
         }
@@ -92,8 +98,7 @@ export const ProfileScreen = () => {
   };
 
   const handleSignOut = async () => {
-    // TODO: Re-enable after app approval
-    // await RevenueCatService.logout();
+    await IAPService.logout();
     setUser(null);
     setHasOnboarded(false);
     navigation.replace('Landing');
@@ -105,16 +110,15 @@ export const ProfileScreen = () => {
       'Are you sure you want to permanently delete your account? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
+        {
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             try {
               if (auth().currentUser) {
                 await auth().currentUser?.delete();
               }
-              // TODO: Re-enable after app approval
-              // await RevenueCatService.logout();
+              await IAPService.logout();
               setUser(null);
               setHasOnboarded(false);
               navigation.replace('Landing');
@@ -124,8 +128,7 @@ export const ProfileScreen = () => {
                 if (auth().currentUser) {
                   await auth().signOut();
                 }
-                // TODO: Re-enable after app approval
-                // await RevenueCatService.logout();
+                await IAPService.logout();
                 setUser(null);
                 setHasOnboarded(false);
                 navigation.replace('Landing');
@@ -134,22 +137,24 @@ export const ProfileScreen = () => {
                 Alert.alert('Error', e.message || 'Failed to delete account.');
               }
             }
-          } 
+          }
         }
       ]
     );
   };
 
   const handleRestore = async () => {
-    // TODO: Re-enable after app approval
-    // await RevenueCatService.restorePurchases();
-    Alert.alert('Coming Soon', 'This feature will be available after app approval.');
+    const result = await IAPService.restorePurchases();
+    if (result.success && result.isPremium) {
+      setPremium(true);
+      Alert.alert('Success', 'Your purchases have been restored!');
+    } else {
+      Alert.alert('No Purchases Found', 'No active subscription was found on this account.');
+    }
   };
 
   const handleManageSubscription = async () => {
-    // TODO: Re-enable after app approval
-    // await RevenueCatService.manageSubscription();
-    Alert.alert('Coming Soon', 'This feature will be available after app approval.');
+    await IAPService.manageSubscription();
   };
 
   const toggleDialect = () => {
@@ -178,32 +183,30 @@ export const ProfileScreen = () => {
             <Animated.Text entering={FadeInDown.duration(500).delay(200).springify()} style={styles.sectionTitle}>
               Account & Settings
             </Animated.Text>
-            
-            {/* TODO: Re-enable after app approval */}
-            {/* <AnimatedMenuItem
+
+            <AnimatedMenuItem
               icon={<Crown color={isPremium ? '#F1C40F' : theme.colors.textSecondary} size={20} />}
               title="Subscription"
               subtitle={isPremium ? "Premium Active" : "Upgrade to Premium"}
               onPress={() => isPremium ? handleManageSubscription() : navigation.navigate('Paywall')}
               delay={300}
               isPremium={isPremium}
-            /> */}
+            />
 
-            <AnimatedMenuItem 
+            <AnimatedMenuItem
               icon={<Globe color={theme.colors.accentPrimary} size={20} />}
               title="Dialect"
               subtitle={dialect === 'spain' ? "Spain 🇪🇸" : "Latin America 🌎"}
               onPress={toggleDialect}
               delay={400}
             />
-            
-            {/* TODO: Re-enable after app approval */}
-            {/* <AnimatedMenuItem
+
+            <AnimatedMenuItem
               icon={<CreditCard color={theme.colors.accentSecondary} size={20} />}
               title="Restore Purchases"
               onPress={handleRestore}
               delay={500}
-            /> */}
+            />
 
           </View>
 
@@ -234,12 +237,19 @@ export const ProfileScreen = () => {
                 onPress={resetCourseData}
                 delay={550}
               />
-              <AnimatedMenuItem 
+              <AnimatedMenuItem
                 icon={<Bug color={theme.colors.accentPrimary} size={20} />}
                 title="Reset Free Lessons"
                 subtitle={`Currently used: ${freeLessonsUsed}/2`}
                 onPress={resetFreeLessons}
                 delay={565}
+              />
+              <AnimatedMenuItem
+                icon={<Bug color="#F1C40F" size={20} />}
+                title="Force Check Premium Status"
+                subtitle="Re-check IAP subscriptions now"
+                onPress={forceCheckPremium}
+                delay={567}
               />
               <AnimatedMenuItem 
                 icon={<Bug color={theme.colors.accentPrimary} size={20} />}

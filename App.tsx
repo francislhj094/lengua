@@ -4,7 +4,7 @@ import * as Updates from 'expo-updates';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { theme } from './src/core/theme';
-import { RevenueCatService } from './src/services/revenuecat';
+import { IAPService } from './src/services/iap';
 import * as Font from 'expo-font';
 import {
   Outfit_400Regular,
@@ -51,12 +51,11 @@ export default function App() {
         console.error('Font loading failed', e);
       }
 
-      // TODO: Re-enable after app approval
-      // try {
-      //   await RevenueCatService.initialize();
-      // } catch (e) {
-      //   console.error('RevenueCat initialization failed', e);
-      // }
+      try {
+        await IAPService.initialize();
+      } catch (e) {
+        console.error('IAP initialization failed', e);
+      }
 
       setFontsLoaded(true);
     }

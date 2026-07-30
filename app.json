@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lengua: Learn Spanish Daily",
     "slug": "lengua",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -48,8 +48,13 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "85175db5-b945-4441-9824-43d85625c71b"
+        "projectId": "cd0f91dc-e396-4fff-b5fa-d1865f62ec25"
       }
-    }
+    },
+    "android": {
+      "package": "com.launchfast.lengua",
+      "googleServicesFile": "./google-services.json"
+    },
+    "owner": "gublermaybellineus"
   }
 }

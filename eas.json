@@ -33,6 +33,20 @@
         "EXPO_PUBLIC_RC_APPLE_KEY": "appl_AVdkjjDrANdQXdQmwFHhCVHVJNK"
       }
     },
+    "preview-standalone": {
+      "distribution": "internal",
+      "channel": "preview",
+      "developmentClient": false,
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_RC_APPLE_KEY": "appl_AVdkjjDrANdQXdQmwFHhCVHVJNK"
+      }
+    },
     "production": {
       "autoIncrement": false,
       "ios": {

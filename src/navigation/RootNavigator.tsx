@@ -33,16 +33,18 @@ export const RootNavigator = () => {
   React.useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
+        // TODO: Re-enable after app approval
         // App has come to the foreground! Re-verify premium status.
-        const isNowPremium = await RevenueCatService.checkPremiumStatus();
-        setPremium(isNowPremium);
+        // const isNowPremium = await RevenueCatService.checkPremiumStatus();
+        // setPremium(isNowPremium);
       }
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
+
+    // TODO: Re-enable after app approval
     // Check once on mount as well
-    RevenueCatService.checkPremiumStatus().then(setPremium);
+    // RevenueCatService.checkPremiumStatus().then(setPremium);
 
     const unsubscribeAuth = auth().onAuthStateChanged(user => {
       if (user) {
@@ -73,7 +75,8 @@ export const RootNavigator = () => {
       <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Auth" component={AuthScreen} />
-      <Stack.Screen name="Paywall" component={PaywallScreen} />
+      {/* TODO: Re-enable after app approval */}
+      {/* <Stack.Screen name="Paywall" component={PaywallScreen} /> */}
       <Stack.Screen name="Main" component={MainTabNavigator} />
       <Stack.Screen name="Vocab" component={VocabScreen} />
       <Stack.Screen name="Lesson" component={LessonScreen} />

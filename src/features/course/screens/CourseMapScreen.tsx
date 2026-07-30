@@ -11,10 +11,11 @@ export const CourseMapScreen = ({ navigation }: any) => {
   const { streak, hearts, xp, isPremium, freeLessonsUsed, incrementFreeLessonsUsed } = useUserStore();
 
   const handlePressLesson = (lesson: Lesson) => {
-    if (!isPremium && freeLessonsUsed >= 2) {
-      navigation.navigate('Paywall');
-      return;
-    }
+    // TODO: Re-enable after app approval
+    // if (!isPremium && freeLessonsUsed >= 2) {
+    //   navigation.navigate('Paywall');
+    //   return;
+    // }
 
     if (lesson.status !== 'locked') {
       if (!isPremium) {

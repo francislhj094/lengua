@@ -82,7 +82,8 @@ export const ProfileScreen = () => {
             if (auth().currentUser) {
               await auth().signOut();
             }
-            await RevenueCatService.logout();
+            // TODO: Re-enable after app approval
+            // await RevenueCatService.logout();
             navigation.replace('Onboarding');
           }
         }
@@ -91,7 +92,8 @@ export const ProfileScreen = () => {
   };
 
   const handleSignOut = async () => {
-    await RevenueCatService.logout();
+    // TODO: Re-enable after app approval
+    // await RevenueCatService.logout();
     setUser(null);
     setHasOnboarded(false);
     navigation.replace('Landing');
@@ -111,7 +113,8 @@ export const ProfileScreen = () => {
               if (auth().currentUser) {
                 await auth().currentUser?.delete();
               }
-              await RevenueCatService.logout();
+              // TODO: Re-enable after app approval
+              // await RevenueCatService.logout();
               setUser(null);
               setHasOnboarded(false);
               navigation.replace('Landing');
@@ -121,7 +124,8 @@ export const ProfileScreen = () => {
                 if (auth().currentUser) {
                   await auth().signOut();
                 }
-                await RevenueCatService.logout();
+                // TODO: Re-enable after app approval
+                // await RevenueCatService.logout();
                 setUser(null);
                 setHasOnboarded(false);
                 navigation.replace('Landing');
@@ -137,12 +141,15 @@ export const ProfileScreen = () => {
   };
 
   const handleRestore = async () => {
-    await RevenueCatService.restorePurchases();
-    Alert.alert('Success', 'Purchases restored successfully!');
+    // TODO: Re-enable after app approval
+    // await RevenueCatService.restorePurchases();
+    Alert.alert('Coming Soon', 'This feature will be available after app approval.');
   };
 
   const handleManageSubscription = async () => {
-    await RevenueCatService.manageSubscription();
+    // TODO: Re-enable after app approval
+    // await RevenueCatService.manageSubscription();
+    Alert.alert('Coming Soon', 'This feature will be available after app approval.');
   };
 
   const toggleDialect = () => {
@@ -172,14 +179,15 @@ export const ProfileScreen = () => {
               Account & Settings
             </Animated.Text>
             
-            <AnimatedMenuItem 
+            {/* TODO: Re-enable after app approval */}
+            {/* <AnimatedMenuItem
               icon={<Crown color={isPremium ? '#F1C40F' : theme.colors.textSecondary} size={20} />}
               title="Subscription"
               subtitle={isPremium ? "Premium Active" : "Upgrade to Premium"}
               onPress={() => isPremium ? handleManageSubscription() : navigation.navigate('Paywall')}
               delay={300}
               isPremium={isPremium}
-            />
+            /> */}
 
             <AnimatedMenuItem 
               icon={<Globe color={theme.colors.accentPrimary} size={20} />}
@@ -189,12 +197,13 @@ export const ProfileScreen = () => {
               delay={400}
             />
             
-            <AnimatedMenuItem 
+            {/* TODO: Re-enable after app approval */}
+            {/* <AnimatedMenuItem
               icon={<CreditCard color={theme.colors.accentSecondary} size={20} />}
               title="Restore Purchases"
               onPress={handleRestore}
               delay={500}
-            />
+            /> */}
 
           </View>
 

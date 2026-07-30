@@ -1,4 +1,3 @@
-import 'expo-dev-client';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import * as Updates from 'expo-updates';
@@ -52,11 +51,12 @@ export default function App() {
         console.error('Font loading failed', e);
       }
 
-      try {
-        await RevenueCatService.initialize();
-      } catch (e) {
-        console.error('RevenueCat initialization failed', e);
-      }
+      // TODO: Re-enable after app approval
+      // try {
+      //   await RevenueCatService.initialize();
+      // } catch (e) {
+      //   console.error('RevenueCat initialization failed', e);
+      // }
 
       setFontsLoaded(true);
     }

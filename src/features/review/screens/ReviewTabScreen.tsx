@@ -13,10 +13,11 @@ export const ReviewTabScreen = () => {
   const navigation = useNavigation<any>();
 
   const handleStartPractice = () => {
-    if (!isPremium && freeLessonsUsed >= 2) {
-      navigation.navigate('Paywall');
-      return;
-    }
+    // TODO: Re-enable after app approval
+    // if (!isPremium && freeLessonsUsed >= 2) {
+    //   navigation.navigate('Paywall');
+    //   return;
+    // }
     if (!isPremium) {
       incrementFreeLessonsUsed();
     }

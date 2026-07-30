@@ -15,10 +15,11 @@ export const HomeScreen = () => {
   const { isPremium, freeLessonsUsed, incrementFreeLessonsUsed } = useUserStore();
 
   const handleStartLesson = (lessonId: string) => {
-    if (!isPremium && freeLessonsUsed >= 2) {
-      navigation.navigate('Paywall');
-      return;
-    }
+    // TODO: Re-enable after app approval
+    // if (!isPremium && freeLessonsUsed >= 2) {
+    //   navigation.navigate('Paywall');
+    //   return;
+    // }
     if (!isPremium) {
       incrementFreeLessonsUsed();
     }

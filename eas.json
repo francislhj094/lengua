@@ -28,6 +28,9 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_RC_APPLE_KEY": "appl_AVdkjjDrANdQXdQmwFHhCVHVJNK"
       }
     },
     "production": {

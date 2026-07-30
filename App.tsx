@@ -1,4 +1,3 @@
-import 'expo-dev-client';
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import * as Updates from 'expo-updates';

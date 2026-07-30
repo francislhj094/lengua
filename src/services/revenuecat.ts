@@ -20,8 +20,11 @@ export class RevenueCatService {
           platform: Platform.OS,
           hasAppleKey: !!API_KEYS.apple,
           hasGoogleKey: !!API_KEYS.google,
+          env: process.env.EXPO_PUBLIC_RC_APPLE_KEY ? 'SET' : 'NOT SET',
         });
-        throw new Error(`RevenueCat API key not configured for ${Platform.OS}`);
+        // Don't throw - let the app continue without IAP
+        console.warn('[RevenueCat] Continuing without RevenueCat - IAP will not work');
+        return;
       }
 
       console.log('[RevenueCat] Configuring with API key:', apiKey.substring(0, 10) + '...');
@@ -35,7 +38,8 @@ export class RevenueCatService {
       console.log('[RevenueCat] SDK initialized successfully');
     } catch (error) {
       console.error('[RevenueCat] Initialization failed:', error);
-      throw error;
+      // Don't throw - let the app continue
+      console.warn('[RevenueCat] Continuing without RevenueCat - IAP will not work');
     }
   }
 

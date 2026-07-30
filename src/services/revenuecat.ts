@@ -9,26 +9,71 @@ const API_KEYS = {
 
 export class RevenueCatService {
   static async initialize() {
-    Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-    
-    if (Platform.OS === 'ios') {
-      Purchases.configure({ apiKey: API_KEYS.apple });
-    } else if (Platform.OS === 'android') {
-      Purchases.configure({ apiKey: API_KEYS.google });
+    try {
+      console.log('[RevenueCat] Initializing SDK...');
+      Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+
+      const apiKey = Platform.OS === 'ios' ? API_KEYS.apple : API_KEYS.google;
+
+      if (!apiKey) {
+        console.error('[RevenueCat] API key is missing!', {
+          platform: Platform.OS,
+          hasAppleKey: !!API_KEYS.apple,
+          hasGoogleKey: !!API_KEYS.google,
+        });
+        throw new Error(`RevenueCat API key not configured for ${Platform.OS}`);
+      }
+
+      console.log('[RevenueCat] Configuring with API key:', apiKey.substring(0, 10) + '...');
+
+      if (Platform.OS === 'ios') {
+        Purchases.configure({ apiKey: API_KEYS.apple });
+      } else if (Platform.OS === 'android') {
+        Purchases.configure({ apiKey: API_KEYS.google });
+      }
+
+      console.log('[RevenueCat] SDK initialized successfully');
+    } catch (error) {
+      console.error('[RevenueCat] Initialization failed:', error);
+      throw error;
     }
   }
 
   static async getOfferings() {
     try {
+      console.log('[RevenueCat] Fetching offerings...');
       const offerings = await Purchases.getOfferings();
-      if (offerings.current !== null) {
-        // Return available packages (e.g. Monthly, Annual, Lifetime)
+
+      console.log('[RevenueCat] Offerings response:', {
+        hasCurrent: !!offerings.current,
+        currentId: offerings.current?.identifier,
+        packagesCount: offerings.current?.availablePackages?.length || 0,
+        allOfferingsCount: Object.keys(offerings.all).length,
+      });
+
+      if (__DEV__) {
+        console.log('[RevenueCat] Full offerings:', JSON.stringify(offerings, null, 2));
+      }
+
+      if (offerings.current !== null && offerings.current.availablePackages.length > 0) {
+        console.log('[RevenueCat] Returning packages:', offerings.current.availablePackages.map(p => ({
+          id: p.identifier,
+          type: p.packageType,
+          price: p.product.priceString,
+        })));
         return offerings.current.availablePackages;
+      } else {
+        console.error('[RevenueCat] No current offering or packages available', {
+          hasOfferings: Object.keys(offerings.all).length > 0,
+          offeringIds: Object.keys(offerings.all),
+        });
+        return [];
       }
     } catch (e) {
-      console.error('Error fetching offerings:', e);
+      console.error('[RevenueCat] Error fetching offerings:', e);
+      console.error('[RevenueCat] Error stack:', e instanceof Error ? e.stack : 'No stack');
+      throw e;
     }
-    return [];
   }
 
   static async purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo | null> {

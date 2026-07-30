@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lengua: Learn Spanish Daily",
     "slug": "lengua",
-    "version": "1.0.0",
+    "version": "1.1.1",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -19,7 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.launchfast.lengua",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "2",
+      "buildNumber": "5",
       "entitlements": {
         "aps-environment": "production"
       },

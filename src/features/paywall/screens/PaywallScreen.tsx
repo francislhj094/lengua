@@ -22,9 +22,11 @@ const FEATURES = [
 ];
 
 export const PaywallScreen = ({ navigation }: any) => {
-  const [packages, setPackages] = useState<any[]>(MOCK_PACKAGES);
+  const [packages, setPackages] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string>('annual');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [productsLoadError, setProductsLoadError] = useState<string | null>(null);
   const { setPremium } = useUserStore();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
@@ -32,25 +34,54 @@ export const PaywallScreen = ({ navigation }: any) => {
   // Pulse animation for the CTA button
   const pulseScale = useSharedValue(1);
   
+
   useEffect(() => {
-    RevenueCatService.getOfferings().then((pkgs) => {
-      if (pkgs && pkgs.length > 0) {
-        const mapped = pkgs.map((p: any) => ({
-          identifier: p.identifier,
-          title: p.packageType === 'ANNUAL' ? '12 Months' : '1 Month',
-          priceString: p.product.priceString,
-          isPopular: p.packageType === 'ANNUAL',
-          period: '',
-          badge: 'SAVE 50%',
-          billingText: p.packageType === 'ANNUAL' ? 'Billed yearly' : 'Billed monthly',
-          rcPackage: p,
-        }));
+    const loadProducts = async () => {
+      try {
+        console.log('[PaywallScreen] Starting to load RevenueCat offerings...');
+        const pkgs = await RevenueCatService.getOfferings();
+        console.log('[PaywallScreen] Received packages:', pkgs?.length || 0);
+
+        if (!pkgs || pkgs.length === 0) {
+          console.error('[PaywallScreen] No packages returned from RevenueCat');
+          setIsLoadingProducts(false);
+          setProductsLoadError('No products available');
+          setPackages(MOCK_PACKAGES); // Show mock packages for display only
+          return;
+        }
+
+        const mapped = pkgs.map((p: any) => {
+          const hasFreeTrial = p.product.introPrice !== null;
+          return {
+            identifier: p.identifier,
+            title: p.packageType === 'ANNUAL' ? '12 Months' : '1 Month',
+            priceString: p.product.priceString,
+            isPopular: p.packageType === 'ANNUAL',
+            period: '',
+            badge: 'SAVE 50%',
+            billingText: p.packageType === 'ANNUAL' ? 'Billed yearly' : 'Billed monthly',
+            freeTrialText: hasFreeTrial ? `7 days free, then ${p.product.priceString}` : null,
+            rcPackage: p,
+          };
+        });
+
         setPackages(mapped);
         const annual = mapped.find((m: any) => m.isPopular);
         if (annual) setSelectedId(annual.identifier);
+        setIsLoadingProducts(false);
+        setProductsLoadError(null);
+        console.log('[PaywallScreen] Successfully loaded products');
+      } catch (error: any) {
+        console.error('[PaywallScreen] Error loading RevenueCat offerings:', error);
+        console.error('[PaywallScreen] Error details:', JSON.stringify(error, null, 2));
+        setIsLoadingProducts(false);
+        setProductsLoadError(error?.message || 'Failed to load products');
+        setPackages(MOCK_PACKAGES); // Show mock packages for display only
       }
-    }).catch(console.error);
-    
+    };
+
+    loadProducts();
+
     // Start subtle pulse animation
     pulseScale.value = withRepeat(
       withSequence(
@@ -67,9 +98,29 @@ export const PaywallScreen = ({ navigation }: any) => {
   }));
 
   const handlePurchase = async () => {
-    setIsLoading(true);
+    if (isLoadingProducts || productsLoadError) {
+      Alert.alert(
+        'Products Not Available',
+        productsLoadError || 'Subscription products are still loading. Please wait a moment and try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     const selectedPackage = packages.find(p => p.identifier === selectedId);
-    
+
+    if (!selectedPackage?.rcPackage) {
+      console.error('[PaywallScreen] Attempted purchase without valid package');
+      Alert.alert(
+        'Product Not Available',
+        'The selected subscription product is not available. This may be a configuration issue.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    setIsLoading(true);
+
     if (selectedPackage && selectedPackage.rcPackage) {
       try {
         const customerInfo = await RevenueCatService.purchasePackage(selectedPackage.rcPackage);
@@ -95,9 +146,6 @@ export const PaywallScreen = ({ navigation }: any) => {
       } finally {
         setIsLoading(false);
       }
-    } else {
-      setIsLoading(false);
-      Alert.alert('Error', 'Products failed to load. Please restart the app and try again.');
     }
   };
 
@@ -170,6 +218,21 @@ export const PaywallScreen = ({ navigation }: any) => {
 
           {/* Pricing Cards */}
           <Animated.View entering={FadeInDown.duration(700).delay(300).springify()} style={styles.plansContainer}>
+            {productsLoadError && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorText}>⚠️ Products unavailable</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsLoadingProducts(true);
+                    setProductsLoadError(null);
+                    loadProducts();
+                  }}
+                  style={styles.retryButton}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             {packages.map((pkg) => {
               const isSelected = selectedId === pkg.identifier;
               
@@ -201,15 +264,20 @@ export const PaywallScreen = ({ navigation }: any) => {
                       {pkg.title}
                     </Text>
                     <View style={styles.priceRow}>
-                      <Text 
-                        style={[styles.priceText, isSelected && styles.priceTextSelected]} 
-                        numberOfLines={1} 
+                      <Text
+                        style={[styles.priceText, isSelected && styles.priceTextSelected]}
+                        numberOfLines={1}
                         adjustsFontSizeToFit
                       >
                         {pkg.priceString}
                       </Text>
                     </View>
                     <Text style={[styles.billingText, isSelected && styles.billingTextSelected]}>{pkg.billingText}</Text>
+                    {pkg.freeTrialText && (
+                      <Text style={[styles.freeTrialText, isSelected && styles.freeTrialTextSelected]}>
+                        {pkg.freeTrialText}
+                      </Text>
+                    )}
                     {isSelected && (
                       <View style={styles.selectionCheck}>
                         <CheckCircle2 color={theme.colors.accentPrimary} size={20} fill="#FFF" />
@@ -226,13 +294,13 @@ export const PaywallScreen = ({ navigation }: any) => {
         <Animated.View entering={FadeInUp.duration(700).delay(450).springify()} style={[styles.stickyFooter, isTablet && styles.stickyFooterTablet]}>
 
           <View style={[styles.stickyFooterContent, isTablet && styles.stickyFooterContentTablet]}>
-            <TouchableOpacity 
-              activeOpacity={0.85} 
+            <TouchableOpacity
+              activeOpacity={0.85}
               onPress={handlePurchase}
-              disabled={isLoading}
+              disabled={isLoading || isLoadingProducts}
               style={{ width: '100%' }}
             >
-              <Animated.View style={[styles.mainButtonContainer, animatedButtonProps, isLoading && { opacity: 0.7 }]}>
+              <Animated.View style={[styles.mainButtonContainer, animatedButtonProps, (isLoading || isLoadingProducts) && { opacity: 0.7 }]}>
                 <LinearGradient
                   colors={['#FFC043', theme.colors.accentPrimary]}
                   start={{x: 0, y: 0}}
@@ -241,13 +309,18 @@ export const PaywallScreen = ({ navigation }: any) => {
                 >
                   <Zap size={20} color={theme.colors.primaryDark} fill={theme.colors.primaryDark} style={{marginRight: 6}} />
                   <Text style={styles.mainButtonText}>
-                    {isLoading ? "Processing..." : "Start 7-Day Free Trial"}
+                    {isLoadingProducts ? "Loading..." : isLoading ? "Processing..." : "Start 7-Day Free Trial"}
                   </Text>
                 </LinearGradient>
               </Animated.View>
             </TouchableOpacity>
-            
-            <Text style={styles.cancelText}>Cancel anytime. Secure checkout.</Text>
+
+            <Text style={styles.trialDisclosure}>
+              {packages.find(p => p.identifier === selectedId)?.freeTrialText
+                ? `Free for 7 days, then ${packages.find(p => p.identifier === selectedId)?.priceString}${packages.find(p => p.identifier === selectedId)?.title === '12 Months' ? '/year' : '/month'}`
+                : `${packages.find(p => p.identifier === selectedId)?.priceString}${packages.find(p => p.identifier === selectedId)?.title === '12 Months' ? '/year' : '/month'}`}
+            </Text>
+            <Text style={styles.cancelSubtext}>Cancel anytime. Secure checkout.</Text>
             
             <View style={styles.footerLinks}>
               <TouchableOpacity onPress={handleRestore}>
@@ -518,13 +591,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
   },
+  freeTrialText: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 11,
+    color: theme.colors.textSecondary,
+    marginTop: 6,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  freeTrialTextSelected: {
+    color: theme.colors.accentPrimary,
+    fontWeight: '700',
+  },
+  trialDisclosure: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 15,
+    color: theme.colors.textPrimary,
+    marginTop: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   cancelText: {
     fontFamily: theme.typography.fonts.body,
-    fontSize: 12,
-    color: theme.colors.textSecondary,
+    fontSize: 13,
+    color: theme.colors.textPrimary,
     marginTop: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  cancelSubtext: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 11,
+    color: theme.colors.textSecondary,
+    marginTop: 4,
     marginBottom: 8,
     fontWeight: '500',
+    textAlign: 'center',
   },
   footerLinks: {
     flexDirection: 'row',
@@ -540,5 +642,36 @@ const styles = StyleSheet.create({
   footerDot: {
     color: theme.colors.textSecondary,
     marginHorizontal: 8,
+  },
+  errorBanner: {
+    width: '100%',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  errorText: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 13,
+    color: '#991B1B',
+    fontWeight: '600',
+    flex: 1,
+  },
+  retryButton: {
+    backgroundColor: '#991B1B',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontFamily: theme.typography.fonts.body,
+    fontSize: 12,
+    color: '#FFF',
+    fontWeight: '700',
   },
 });

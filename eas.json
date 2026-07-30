@@ -34,6 +34,9 @@
       "autoIncrement": false,
       "ios": {
         "distribution": "store"
+      },
+      "env": {
+        "EXPO_PUBLIC_RC_APPLE_KEY": "appl_AVdkjjDrANdQXdQmwFHhCVHVJNK"
       }
     }
   },

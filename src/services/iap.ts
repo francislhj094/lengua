@@ -3,6 +3,7 @@ import Purchases, {
   PurchasesPackage,
   CustomerInfo,
   LOG_LEVEL,
+  INTRO_ELIGIBILITY_STATUS,
 } from 'react-native-purchases';
 import { MetaService } from './meta';
 
@@ -49,7 +50,12 @@ export interface IAPPackage {
   badge?: string;
   billingText: string;
   freeTrialText?: string | null;
-  /** e.g. "7-Day Free Trial". Null when the product has no free trial. */
+  /**
+   * Whether *this customer* gets a free trial - not merely whether the product
+   * offers one. Someone who already used their trial is charged immediately.
+   */
+  hasFreeTrial: boolean;
+  /** e.g. "7-Day Free Trial". Null when this customer gets no free trial. */
   trialLabel?: string | null;
   /**
    * The full terms shown next to the CTA. Derived from what the store actually
@@ -146,6 +152,10 @@ export class IAPService {
         return [];
       }
 
+      const eligibility = await this.fetchIntroEligibility(
+        available.map((pkg) => pkg.product.identifier),
+      );
+
       this.packageCache.clear();
 
       const packages = available.map((pkg) => {
@@ -155,7 +165,9 @@ export class IAPService {
         const isAnnual = pkg.packageType === 'ANNUAL';
         const periodLabel = isAnnual ? 'year' : 'month';
 
-        const intro = product.introPrice;
+        // An intro offer on the product means nothing if this customer has
+        // already consumed theirs - they get charged full price immediately.
+        const intro = eligibility.get(product.identifier) ? product.introPrice : null;
         // introPrice covers both free trials and paid introductory offers -
         // only a zero price is actually a free trial.
         const isFreeTrial = !!intro && intro.price === 0;
@@ -164,6 +176,7 @@ export class IAPService {
           : null;
 
         return {
+          hasFreeTrial: isFreeTrial,
           identifier: pkg.identifier,
           title: isAnnual ? '12 Months' : '1 Month',
           priceString: product.priceString,
@@ -196,6 +209,37 @@ export class IAPService {
       console.error('[IAP] Error fetching offerings:', error);
       throw error;
     }
+  }
+
+  /**
+   * Per-customer trial eligibility, keyed by product id.
+   *
+   * Anything other than an explicit ELIGIBLE is treated as not eligible.
+   * RevenueCat returns UNKNOWN when it cannot compute eligibility (and always
+   * on Android), and its guidance is to show standard pricing in that case
+   * rather than risk advertising a trial the customer will not receive.
+   */
+  private static async fetchIntroEligibility(
+    productIds: string[],
+  ): Promise<Map<string, boolean>> {
+    const result = new Map<string, boolean>();
+
+    try {
+      const eligibility =
+        await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
+
+      for (const [productId, entry] of Object.entries(eligibility)) {
+        result.set(
+          productId,
+          entry.status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE,
+        );
+      }
+    } catch (error) {
+      // Falls through to standard pricing for every product.
+      console.error('[IAP] Intro eligibility check failed:', error);
+    }
+
+    return result;
   }
 
   /**
@@ -245,7 +289,9 @@ export class IAPService {
         const amount = rcPackage.product.price;
         const currency = rcPackage.product.currencyCode;
 
-        if (rcPackage.product.introPrice) {
+        // Keyed off the customer's actual eligibility, not the product's offer,
+        // so a customer who was charged immediately is not reported as a trial.
+        if (pkg.hasFreeTrial) {
           MetaService.logStartTrial(rcPackage.product.identifier, amount, currency);
         } else {
           MetaService.logPurchase(amount, currency, rcPackage.product.identifier);

@@ -163,6 +163,41 @@ export class MetaService {
     }
   }
 
+  /**
+   * Fires once, when the user finishes their very first lesson.
+   *
+   * This is the campaign optimisation event. Purchase and StartTrial are too
+   * sparse at low daily budgets to ever exit Meta's learning phase (~50 events
+   * a week), whereas roughly half of installs reach lesson one - enough volume
+   * to train on, while still filtering out installs that never opened the app.
+   */
+  static logCompleteTutorial(): void {
+    try {
+      AppEventsLogger.logEvent('CompleteTutorial', { contentType: 'lesson_1' });
+      AppEventsLogger.flush();
+      console.log('[Meta] First lesson completion logged');
+    } catch (error) {
+      console.error('[Meta] Failed to log tutorial completion:', error);
+    }
+  }
+
+  /**
+   * Plan selected on the paywall but not purchased - the mid-funnel signal
+   * between ViewContent and StartTrial. Currently unwired; call from the
+   * paywall's plan-select handler to fill the eighth AEM slot.
+   */
+  static logAddToCart(productId: string, amount: number, currency: string): void {
+    try {
+      AppEventsLogger.logEvent('AddToCart', {
+        productId,
+        currency,
+        valueToSum: amount,
+      });
+    } catch (error) {
+      console.error('[Meta] Failed to log plan selection:', error);
+    }
+  }
+
   static flush(): void {
     try {
       AppEventsLogger.flush();

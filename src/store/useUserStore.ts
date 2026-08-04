@@ -13,6 +13,7 @@ export interface UserGamificationState {
   dialect: 'spain' | 'latin_american';
   weakWords: any[];
   freeLessonsUsed: number;
+  hasRequestedReview: boolean;
   setPremium: (status: boolean) => void;
   setHasOnboarded: (status: boolean) => void;
   setDialect: (dialect: 'spain' | 'latin_american') => void;
@@ -24,6 +25,7 @@ export interface UserGamificationState {
   removeWeakWord: (id: string) => void;
   updateStreak: () => void;
   incrementFreeLessonsUsed: () => void;
+  markReviewRequested: () => void;
 }
 
 export const useUserStore = create<UserGamificationState>()(
@@ -39,6 +41,7 @@ export const useUserStore = create<UserGamificationState>()(
   dialect: 'spain',
   weakWords: [],
   freeLessonsUsed: 0,
+  hasRequestedReview: false,
 
   setPremium: (status: boolean) => set({ isPremium: status }),
   setHasOnboarded: (status: boolean) => set({ hasOnboarded: status }),
@@ -74,6 +77,8 @@ export const useUserStore = create<UserGamificationState>()(
   incrementFreeLessonsUsed: () => set((state) => ({
     freeLessonsUsed: state.freeLessonsUsed + 1
   })),
+
+  markReviewRequested: () => set({ hasRequestedReview: true }),
 
   updateStreak: () => {
     const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"

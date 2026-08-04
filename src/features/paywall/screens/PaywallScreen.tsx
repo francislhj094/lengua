@@ -14,8 +14,8 @@ import { useAuthStore } from '../../../store/useAuthStore';
 // they fail. Prices are intentionally blank rather than invented - showing a
 // hardcoded USD figure to a shopper in another storefront misstates the terms.
 const MOCK_PACKAGES: IAPPackage[] = [
-  { identifier: 'monthly', title: '1 Month', priceString: '—', isPopular: false, period: '/mo', periodLabel: 'month', billingText: 'Billed monthly', priceDisclosure: '', productId: '' },
-  { identifier: 'annual', title: '12 Months', priceString: '—', isPopular: true, period: '/year', periodLabel: 'year', billingText: 'Billed yearly', priceDisclosure: '', productId: '' },
+  { identifier: 'monthly', title: '1 Month', priceString: '—', isPopular: false, period: '/mo', periodLabel: 'month', billingText: 'Billed monthly', hasFreeTrial: false, priceDisclosure: '', productId: '' },
+  { identifier: 'annual', title: '12 Months', priceString: '—', isPopular: true, period: '/year', periodLabel: 'year', billingText: 'Billed yearly', hasFreeTrial: false, priceDisclosure: '', productId: '' },
 ];
 
 const FEATURES = [

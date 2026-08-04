@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import * as StoreReview from 'expo-store-review';
 import { useUserStore } from '../../../store/useUserStore';
 import { NotificationService } from '../../../services/notifications';
+import { MetaService } from '../../../services/meta';
 
 const { width } = Dimensions.get('window');
 
@@ -99,16 +100,31 @@ export const LessonScreen = ({ route, navigation }: any) => {
         // Reschedule the gamified retention push notifications whenever they complete a standard lesson
         NotificationService.scheduleRetentionReminders().catch(console.error);
 
+        // completeLesson set() has already flushed, so this count includes the lesson just finished.
+        const completedCount = useCourseStore.getState().units.reduce(
+          (total, unit) => total + unit.lessons.filter(l => l.status === 'completed').length,
+          0
+        );
+
+        // The one event Meta optimises campaigns against - see MetaService.logCompleteTutorial.
+        if (completedCount === 1) {
+          MetaService.logCompleteTutorial();
+        }
+
         // Gamified In-App Review (ASO Engine)
-        // If the user has proven they like the app (streak >= 3), ask for a 5-star review at the moment of maximum dopamine.
-        StoreReview.isAvailableAsync().then((isAvailable) => {
-          if (isAvailable) {
-            const currentStreak = useUserStore.getState().streak;
-            if (currentStreak >= 3) {
+        // Ask for the 5-star review at the moment of maximum dopamine, but only once.
+        // A 3-day streak alone is too narrow while the app is running paid traffic: most
+        // cold installs churn before day 3 and never see the prompt, so a same-day user
+        // who has finished three lessons qualifies too.
+        const { streak: currentStreak, hasRequestedReview, markReviewRequested } = useUserStore.getState();
+        if (!hasRequestedReview && (currentStreak >= 3 || completedCount >= 3)) {
+          StoreReview.isAvailableAsync().then((isAvailable) => {
+            if (isAvailable) {
+              markReviewRequested();
               StoreReview.requestReview().catch(console.error);
             }
-          }
-        });
+          });
+        }
       }
       navigation.goBack();
     } else {

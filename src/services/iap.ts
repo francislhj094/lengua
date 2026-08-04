@@ -315,6 +315,25 @@ export class IAPService {
     }
   }
 
+  /**
+   * Subscriber attributes make a customer findable in the RevenueCat dashboard
+   * and are carried on webhook payloads, which is what makes a purchase event
+   * reconcilable against your own records.
+   */
+  static async setUserAttributes(attributes: {
+    email?: string | null;
+    displayName?: string | null;
+  }): Promise<void> {
+    try {
+      if (!this.isInitialized) await this.initialize();
+
+      if (attributes.email) await Purchases.setEmail(attributes.email);
+      if (attributes.displayName) await Purchases.setDisplayName(attributes.displayName);
+    } catch (error) {
+      console.error('[IAP] Failed to set subscriber attributes:', error);
+    }
+  }
+
   static async logout(): Promise<void> {
     try {
       if (!this.isInitialized) return;

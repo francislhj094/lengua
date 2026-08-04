@@ -99,6 +99,25 @@ export const PaywallScreen = ({ navigation }: any) => {
         ? `Start ${selectedPackage.trialLabel}`
         : 'Continue';
 
+  /**
+   * Guarantees the session has a stable user ID that RevenueCat is logged in
+   * as. Users who skipped email get a Firebase anonymous account so their
+   * purchase still lands on a durable cloud profile.
+   */
+  const ensureIdentified = async (): Promise<void> => {
+    if (auth().currentUser) return;
+
+    const userCredential = await auth().signInAnonymously();
+    if (!userCredential.user) return;
+
+    useAuthStore.getState().setUser({
+      uid: userCredential.user.uid,
+      email: null,
+      displayName: 'Anonymous Learner',
+    });
+    await IAPService.loginUser(userCredential.user.uid);
+  };
+
   const handlePurchase = async () => {
     if (isLoadingProducts || productsLoadError) {
       Alert.alert(
@@ -124,21 +143,15 @@ export const PaywallScreen = ({ navigation }: any) => {
     setIsLoading(true);
 
     try {
+      // Identity must exist before the transaction, not after. Purchasing while
+      // anonymous attributes the receipt to a throwaway RevenueCat user that
+      // then has to be aliased, which splits one customer across two IDs and
+      // makes webhook reconciliation unreliable.
+      await ensureIdentified();
+
       const result = await IAPService.purchasePackage(selectedPackage);
 
       if (result.success && result.isPremium) {
-        // If the user skipped email, automatically register a ghost account for them so their purchase is saved to a cloud profile
-        if (!auth().currentUser) {
-          const userCredential = await auth().signInAnonymously();
-          if (userCredential.user) {
-            useAuthStore.getState().setUser({
-              uid: userCredential.user.uid,
-              email: null,
-              displayName: 'Anonymous Learner',
-            });
-            await IAPService.loginUser(userCredential.user.uid);
-          }
-        }
         setPremium(true);
         navigation.replace('Main');
       } else {

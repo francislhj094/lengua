@@ -34,6 +34,7 @@ export const AuthScreen = ({ navigation }: any) => {
           displayName: userCredential.user.displayName,
         });
         await IAPService.loginUser(userCredential.user.uid);
+        await IAPService.setUserAttributes({ email: userCredential.user.email });
         MetaService.logCompletedRegistration('email');
       }
 

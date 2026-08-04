@@ -33,14 +33,26 @@ interface RevenueCatEvent {
 }
 
 /**
+ * RevenueCat's field accepts any string, and its placeholder suggests a
+ * "Bearer x" shape, so the token is accepted with or without that prefix.
+ * Surrounding whitespace from a paste is stripped too.
+ */
+function normalizeToken(value: string): string {
+  return value.trim().replace(/^Bearer\s+/i, '');
+}
+
+/**
  * Timing-safe-ish comparison. Node's timingSafeEqual needs equal lengths, so
  * length is checked first and leaks only the length, not the contents.
  */
 function secretsMatch(provided: string, expected: string): boolean {
-  if (provided.length !== expected.length) return false;
+  const a = normalizeToken(provided);
+  const b = normalizeToken(expected);
+
+  if (a.length !== b.length) return false;
   let mismatch = 0;
-  for (let i = 0; i < provided.length; i += 1) {
-    mismatch |= provided.charCodeAt(i) ^ expected.charCodeAt(i);
+  for (let i = 0; i < a.length; i += 1) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
   return mismatch === 0;
 }
@@ -153,7 +165,12 @@ export const revenuecatWebhook = onRequest(
 
     const authHeader = request.get('Authorization') ?? '';
     if (!secretsMatch(authHeader, WEBHOOK_SECRET.value())) {
-      logger.warn('Rejected webhook with bad Authorization header');
+      // Lengths only - never log the values themselves. Equal lengths point at
+      // a wrong/stale value; a zero length means the header was not sent.
+      logger.warn('Rejected webhook with bad Authorization header', {
+        receivedLength: normalizeToken(authHeader).length,
+        expectedLength: normalizeToken(WEBHOOK_SECRET.value()).length,
+      });
       response.status(401).send('Unauthorized');
       return;
     }

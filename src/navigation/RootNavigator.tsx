@@ -13,6 +13,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { IAPService } from '../services/iap';
 import { AppState, AppStateStatus } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 export type RootStackParamList = {
   Landing: undefined;
@@ -44,13 +45,37 @@ export const RootNavigator = () => {
     // Check once on mount as well
     IAPService.checkPremiumStatus().then(setPremium);
 
+    // Torn down and re-established as the signed-in user changes.
+    let unsubscribeEntitlement: (() => void) | undefined;
+
     const unsubscribeAuth = auth().onAuthStateChanged(user => {
+      unsubscribeEntitlement?.();
+      unsubscribeEntitlement = undefined;
+
       if (user) {
         setUser({
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
         });
+
+        // The webhook-written entitlement is authoritative when it exists: it
+        // reflects refunds and expiries the client SDK would not see until its
+        // next refresh. Falls through to the SDK value when absent.
+        unsubscribeEntitlement = firestore()
+          .collection('users')
+          .doc(user.uid)
+          .onSnapshot(
+            snapshot => {
+              const entitlement = snapshot.get('entitlement') as
+                | { isPremium?: boolean }
+                | undefined;
+              if (typeof entitlement?.isPremium === 'boolean') {
+                setPremium(entitlement.isPremium);
+              }
+            },
+            error => console.error('[Entitlement] Listener failed:', error),
+          );
       } else {
         setUser(null);
       }
@@ -59,6 +84,7 @@ export const RootNavigator = () => {
     return () => {
       subscription.remove();
       unsubscribeAuth();
+      unsubscribeEntitlement?.();
     };
   }, [setPremium, setUser]);
 

@@ -14,15 +14,49 @@ const API_KEYS = {
 // Entitlement identifier configured in the RevenueCat dashboard.
 const ENTITLEMENT_ID = 'premium';
 
+const PERIOD_UNIT_LABELS: Record<string, string> = {
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+  YEAR: 'year',
+};
+
+function periodUnitLabel(unit?: string): string {
+  return PERIOD_UNIT_LABELS[String(unit).toUpperCase()] ?? 'day';
+}
+
+/** "7 days", "1 week" - for inline sentences. */
+function formatDuration(count?: number, unit?: string): string {
+  const n = count ?? 0;
+  const label = periodUnitLabel(unit);
+  return `${n} ${n === 1 ? label : `${label}s`}`;
+}
+
+/** "7-Day", "1-Week" - for title-cased button copy. */
+function formatDurationTitle(count?: number, unit?: string): string {
+  const label = periodUnitLabel(unit);
+  return `${count ?? 0}-${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+}
+
 export interface IAPPackage {
   identifier: string;
   title: string;
   priceString: string;
   isPopular: boolean;
   period: string;
+  /** 'year' | 'month' - used to build billing copy. */
+  periodLabel: string;
   badge?: string;
   billingText: string;
   freeTrialText?: string | null;
+  /** e.g. "7-Day Free Trial". Null when the product has no free trial. */
+  trialLabel?: string | null;
+  /**
+   * The full terms shown next to the CTA. Derived from what the store actually
+   * returns rather than hardcoded, because this is a binding claim about what
+   * the user will be charged.
+   */
+  priceDisclosure: string;
   productId: string;
   price?: number;
   currencyCode?: string;
@@ -114,11 +148,20 @@ export class IAPService {
 
       this.packageCache.clear();
 
-      return available.map((pkg) => {
+      const packages = available.map((pkg) => {
         this.packageCache.set(pkg.identifier, pkg);
 
         const { product } = pkg;
         const isAnnual = pkg.packageType === 'ANNUAL';
+        const periodLabel = isAnnual ? 'year' : 'month';
+
+        const intro = product.introPrice;
+        // introPrice covers both free trials and paid introductory offers -
+        // only a zero price is actually a free trial.
+        const isFreeTrial = !!intro && intro.price === 0;
+        const introDuration = intro
+          ? formatDuration(intro.periodNumberOfUnits, intro.periodUnit)
+          : null;
 
         return {
           identifier: pkg.identifier,
@@ -126,29 +169,59 @@ export class IAPService {
           priceString: product.priceString,
           isPopular: isAnnual,
           period: isAnnual ? '/year' : '/mo',
-          badge: isAnnual ? 'SAVE 50%' : undefined,
+          periodLabel,
           billingText: isAnnual ? 'Billed yearly' : 'Billed monthly',
-          freeTrialText: this.describeTrial(product),
+          freeTrialText: isFreeTrial && introDuration
+            ? `${introDuration} free`
+            : intro && introDuration
+              ? `${intro.priceString} for ${introDuration}`
+              : null,
+          trialLabel: isFreeTrial && intro
+            ? `${formatDurationTitle(intro.periodNumberOfUnits, intro.periodUnit)} Free Trial`
+            : null,
+          priceDisclosure: isFreeTrial && introDuration
+            ? `Free for ${introDuration}, then ${product.priceString}/${periodLabel}`
+            : intro && introDuration
+              ? `${intro.priceString} for ${introDuration}, then ${product.priceString}/${periodLabel}`
+              : `${product.priceString}/${periodLabel}`,
           productId: product.identifier,
           price: product.price,
           currencyCode: product.currencyCode,
         };
       });
+
+      this.applySavingsBadge(packages);
+      return packages;
     } catch (error) {
       console.error('[IAP] Error fetching offerings:', error);
       throw error;
     }
   }
 
-  private static describeTrial(product: PurchasesPackage['product']): string | null {
-    const intro = product.introPrice;
-    if (!intro) return null;
+  /**
+   * Annual savings are calculated against the real monthly price rather than
+   * asserted, so the badge stays truthful if prices change or a storefront
+   * uses a different tier ratio. Mutates the annual package in place.
+   */
+  private static applySavingsBadge(packages: IAPPackage[]): void {
+    const monthly = packages.find((p) => !p.isPopular);
+    const annual = packages.find((p) => p.isPopular);
 
-    const unit = intro.periodUnit?.toLowerCase() ?? 'day';
-    const count = intro.periodNumberOfUnits ?? 0;
-    const plural = count === 1 ? unit : `${unit}s`;
+    if (!annual) return;
 
-    return `${count} ${plural} free, then ${product.priceString}`;
+    // Comparing across currencies would be meaningless.
+    const comparable =
+      monthly?.price &&
+      annual.price &&
+      monthly.currencyCode === annual.currencyCode;
+
+    if (!comparable) {
+      annual.badge = undefined;
+      return;
+    }
+
+    const percent = Math.round((1 - annual.price! / (monthly!.price! * 12)) * 100);
+    annual.badge = percent > 0 ? `SAVE ${percent}%` : undefined;
   }
 
   static async purchasePackage(pkg: IAPPackage): Promise<PurchaseResult> {

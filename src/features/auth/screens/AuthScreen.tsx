@@ -9,6 +9,7 @@ import auth from '@react-native-firebase/auth';
 import { useUserStore } from '../../../store/useUserStore';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { IAPService } from '../../../services/iap';
+import { MetaService } from '../../../services/meta';
 
 export const AuthScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -33,6 +34,7 @@ export const AuthScreen = ({ navigation }: any) => {
           displayName: userCredential.user.displayName,
         });
         await IAPService.loginUser(userCredential.user.uid);
+        MetaService.logCompletedRegistration('email');
       }
 
       const isPremium = await IAPService.checkPremiumStatus();

@@ -4,14 +4,18 @@ import { theme } from '../../../core/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Zap, BookOpen, Plane, Mic, Globe, CheckCircle2 } from 'lucide-react-native';
 import { IAPService, IAPPackage } from '../../../services/iap';
+import { MetaService } from '../../../services/meta';
 import { useUserStore } from '../../../store/useUserStore';
 import Animated, { FadeInDown, FadeInUp, FadeIn, withRepeat, withTiming, useSharedValue, useAnimatedStyle, withSequence } from 'react-native-reanimated';
 import auth from '@react-native-firebase/auth';
 import { useAuthStore } from '../../../store/useAuthStore';
 
-const MOCK_PACKAGES = [
-  { identifier: 'monthly', title: '1 Month', priceString: '$4.99', isPopular: false, period: '/mo', billingText: 'Billed monthly', productId: 'lengua_monthly' },
-  { identifier: 'annual', title: '12 Months', priceString: '$29.99', isPopular: true, period: '/mo', badge: 'SAVE 50%', billingText: 'Billed yearly', productId: 'lengua_annual' },
+// Placeholder rows so the paywall has structure while offerings load or after
+// they fail. Prices are intentionally blank rather than invented - showing a
+// hardcoded USD figure to a shopper in another storefront misstates the terms.
+const MOCK_PACKAGES: IAPPackage[] = [
+  { identifier: 'monthly', title: '1 Month', priceString: '—', isPopular: false, period: '/mo', periodLabel: 'month', billingText: 'Billed monthly', priceDisclosure: '', productId: '' },
+  { identifier: 'annual', title: '12 Months', priceString: '—', isPopular: true, period: '/year', periodLabel: 'year', billingText: 'Billed yearly', priceDisclosure: '', productId: '' },
 ];
 
 const FEATURES = [
@@ -66,6 +70,10 @@ export const PaywallScreen = ({ navigation }: any) => {
 
     loadProducts();
 
+    // Mid-funnel signal: without it Meta only sees installs and purchases, and
+    // campaigns can't optimise against paywall reach.
+    MetaService.logViewedPaywall();
+
     // Start subtle pulse animation
     pulseScale.value = withRepeat(
       withSequence(
@@ -80,6 +88,16 @@ export const PaywallScreen = ({ navigation }: any) => {
   const animatedButtonProps = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }]
   }));
+
+  const selectedPackage = packages.find(p => p.identifier === selectedId);
+
+  const ctaLabel = isLoadingProducts
+    ? 'Loading...'
+    : isLoading
+      ? 'Processing...'
+      : selectedPackage?.trialLabel
+        ? `Start ${selectedPackage.trialLabel}`
+        : 'Continue';
 
   const handlePurchase = async () => {
     if (isLoadingProducts || productsLoadError) {
@@ -305,17 +323,17 @@ export const PaywallScreen = ({ navigation }: any) => {
                 >
                   <Zap size={20} color={theme.colors.primaryDark} fill={theme.colors.primaryDark} style={{marginRight: 6}} />
                   <Text style={styles.mainButtonText}>
-                    {isLoadingProducts ? "Loading..." : isLoading ? "Processing..." : "Start 7-Day Free Trial"}
+                    {ctaLabel}
                   </Text>
                 </LinearGradient>
               </Animated.View>
             </TouchableOpacity>
 
-            <Text style={styles.trialDisclosure}>
-              {packages.find(p => p.identifier === selectedId)?.freeTrialText
-                ? `Free for 7 days, then ${packages.find(p => p.identifier === selectedId)?.priceString}${packages.find(p => p.identifier === selectedId)?.title === '12 Months' ? '/year' : '/month'}`
-                : `${packages.find(p => p.identifier === selectedId)?.priceString}${packages.find(p => p.identifier === selectedId)?.title === '12 Months' ? '/year' : '/month'}`}
-            </Text>
+            {!!selectedPackage?.priceDisclosure && (
+              <Text style={styles.trialDisclosure}>
+                {selectedPackage.priceDisclosure}
+              </Text>
+            )}
             <Text style={styles.cancelSubtext}>Cancel anytime. Secure checkout.</Text>
             
             <View style={styles.footerLinks}>

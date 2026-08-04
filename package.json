@@ -1,6 +1,6 @@
 {
   "name": "lengua",
-  "version": "1.1.1",
+  "version": "1.2.2",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -22,12 +22,14 @@
     "expo-speech": "^57.0.0",
     "expo-status-bar": "~57.0.0",
     "expo-store-review": "~57.0.0",
+    "expo-tracking-transparency": "~57.0.1",
     "expo-updates": "~57.0.6",
     "lucide-react-native": "^1.24.0",
     "react": "19.2.3",
     "react-native": "0.86.0",
-    "react-native-iap": "^15.6.2",
+    "react-native-fbsdk-next": "^13.4.3",
     "react-native-mmkv": "^4.3.2",
+    "react-native-purchases": "^10.6.0",
     "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",

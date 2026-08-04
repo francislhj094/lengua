@@ -1,19 +1,18 @@
 import { Platform } from 'react-native';
-import * as RNIap from 'react-native-iap';
-import {
-  Product,
-  ProductPurchase,
-  PurchaseError,
-  ProductSubscription,
-} from 'react-native-iap';
+import Purchases, {
+  PurchasesPackage,
+  CustomerInfo,
+  LOG_LEVEL,
+} from 'react-native-purchases';
+import { MetaService } from './meta';
 
-// Product IDs from App Store Connect / Google Play Console
-const PRODUCT_IDS = {
-  monthly: Platform.OS === 'ios' ? 'lengua.premium.monthly' : 'lengua.premium.monthly',
-  annual: Platform.OS === 'ios' ? 'lengua.premium.yearly' : 'lengua.premium.yearly',
+const API_KEYS = {
+  apple: process.env.EXPO_PUBLIC_RC_APPLE_KEY || '',
+  google: process.env.EXPO_PUBLIC_RC_GOOGLE_KEY || '',
 };
 
-const skus = [PRODUCT_IDS.monthly, PRODUCT_IDS.annual];
+// Entitlement identifier configured in the RevenueCat dashboard.
+const ENTITLEMENT_ID = 'premium';
 
 export interface IAPPackage {
   identifier: string;
@@ -25,6 +24,8 @@ export interface IAPPackage {
   billingText: string;
   freeTrialText?: string | null;
   productId: string;
+  price?: number;
+  currencyCode?: string;
 }
 
 export interface PurchaseResult {
@@ -34,146 +35,178 @@ export interface PurchaseResult {
 }
 
 /**
- * Native IAP Service using react-native-iap
- * Connects directly to Apple App Store / Google Play Store
+ * IAP service backed by RevenueCat.
+ *
+ * The public surface is deliberately unchanged from the previous
+ * react-native-iap implementation so screens don't need to be touched.
  */
 export class IAPService {
   private static isInitialized = false;
 
+  /**
+   * Live RevenueCat packages, keyed by identifier. purchasePackage() resolves
+   * through this map, so a placeholder/mock package rendered by the paywall can
+   * never reach the store - that mismatch is what produced the
+   * "Products failed to load" error App Review hit.
+   */
+  private static packageCache = new Map<string, PurchasesPackage>();
+
   static async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
+    const apiKey = Platform.OS === 'ios' ? API_KEYS.apple : API_KEYS.google;
+
+    if (!apiKey) {
+      console.error(`[IAP] Missing RevenueCat API key for ${Platform.OS}`);
+      throw new Error('RevenueCat API key is not configured');
+    }
+
     try {
-      console.log('[IAP] Initializing connection to store...');
-      await RNIap.initConnection();
+      console.log('[IAP] Configuring RevenueCat...');
+      Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR);
+      Purchases.configure({ apiKey });
       this.isInitialized = true;
-      console.log('[IAP] Successfully connected to store');
 
-      // Set up purchase listener
-      RNIap.purchaseUpdatedListener((purchase: ProductPurchase) => {
-        console.log('[IAP] Purchase updated:', purchase);
-      });
+      // Link RevenueCat to Meta so renewals are attributed to the original
+      // campaign. Non-fatal: purchases still work without it.
+      await this.refreshAttribution();
 
-      RNIap.purchaseErrorListener((error: PurchaseError) => {
-        console.warn('[IAP] Purchase error:', error);
-      });
+      console.log('[IAP] RevenueCat configured');
     } catch (error) {
       console.error('[IAP] Failed to initialize:', error);
       throw error;
     }
   }
 
+  /**
+   * Pushes the Meta identifiers into RevenueCat. Run again after the ATT
+   * prompt is granted, since the advertising identifier only becomes readable
+   * at that point.
+   */
+  static async refreshAttribution(): Promise<void> {
+    try {
+      const anonymousId = await MetaService.getAnonymousId();
+      if (anonymousId) {
+        await Purchases.setFBAnonymousID(anonymousId);
+      }
+      if (MetaService.isTrackingAuthorized()) {
+        await Purchases.collectDeviceIdentifiers();
+      }
+    } catch (error) {
+      console.error('[IAP] Meta attribution setup failed:', error);
+    }
+  }
+
   static async getOfferings(): Promise<IAPPackage[]> {
     try {
-      console.log('[IAP] Fetching subscriptions from store...');
+      if (!this.isInitialized) await this.initialize();
 
-      if (!this.isInitialized) {
-        try {
-          await this.initialize();
-        } catch (initError) {
-          console.warn('[IAP] Store not available, using mock data');
-          return this.getMockOfferings();
-        }
+      console.log('[IAP] Fetching offerings...');
+      const offerings = await Purchases.getOfferings();
+      const available = offerings.current?.availablePackages ?? [];
+
+      console.log('[IAP] Package count:', available.length);
+
+      if (available.length === 0) {
+        console.warn('[IAP] No packages in current offering - check that the RevenueCat offering is marked Current and products are attached');
+        return [];
       }
 
-      // Use fetchProducts with subscription type in v15+
-      const result = await RNIap.fetchProducts({
-        skus,
-        type: 'subscription',
-      });
+      this.packageCache.clear();
 
-      console.log('[IAP] Received products:', result);
-      const products = result.products || [];
-      console.log('[IAP] Product count:', products.length);
+      return available.map((pkg) => {
+        this.packageCache.set(pkg.identifier, pkg);
 
-      if (products.length === 0) {
-        console.warn('[IAP] No subscriptions found - check App Store Connect configuration');
-        return this.getMockOfferings();
-      }
-
-      const packages: IAPPackage[] = products.map((product: ProductSubscription) => {
-        const isAnnual =
-          product.productId.toLowerCase().includes('yearly') ||
-          product.productId.toLowerCase().includes('annual') ||
-          product.productId.toLowerCase().includes('year');
+        const { product } = pkg;
+        const isAnnual = pkg.packageType === 'ANNUAL';
 
         return {
-          identifier: product.productId,
+          identifier: pkg.identifier,
           title: isAnnual ? '12 Months' : '1 Month',
-          priceString: product.localizedPrice || '$0.00',
+          priceString: product.priceString,
           isPopular: isAnnual,
           period: isAnnual ? '/year' : '/mo',
           badge: isAnnual ? 'SAVE 50%' : undefined,
-          billingText: product.description || (isAnnual ? 'Billed yearly' : 'Billed monthly'),
-          freeTrialText: product.introductoryPrice
-            ? `${product.introductoryPrice} free trial`
-            : null,
-          productId: product.productId,
+          billingText: isAnnual ? 'Billed yearly' : 'Billed monthly',
+          freeTrialText: this.describeTrial(product),
+          productId: product.identifier,
+          price: product.price,
+          currencyCode: product.currencyCode,
         };
       });
-
-      console.log('[IAP] Mapped packages:', packages);
-      return packages;
     } catch (error) {
       console.error('[IAP] Error fetching offerings:', error);
       throw error;
     }
   }
 
+  private static describeTrial(product: PurchasesPackage['product']): string | null {
+    const intro = product.introPrice;
+    if (!intro) return null;
+
+    const unit = intro.periodUnit?.toLowerCase() ?? 'day';
+    const count = intro.periodNumberOfUnits ?? 0;
+    const plural = count === 1 ? unit : `${unit}s`;
+
+    return `${count} ${plural} free, then ${product.priceString}`;
+  }
+
   static async purchasePackage(pkg: IAPPackage): Promise<PurchaseResult> {
-    try {
-      console.log('[IAP] Requesting purchase for:', pkg.productId);
+    const rcPackage = this.packageCache.get(pkg.identifier);
 
-      await RNIap.requestPurchase({
-        request: {
-          apple: { sku: pkg.productId },
-          google: { skus: [pkg.productId] },
-        },
-        type: 'subscription',
-      });
-
-      console.log('[IAP] Purchase request sent');
-
-      // The purchase will be handled by the listener
-      // Return success immediately
+    if (!rcPackage) {
+      console.error('[IAP] No live RevenueCat package for identifier:', pkg.identifier);
       return {
-        success: true,
-        isPremium: true,
+        success: false,
+        isPremium: false,
+        error: 'This subscription is not available right now. Please try again in a moment.',
       };
+    }
+
+    try {
+      console.log('[IAP] Purchasing:', rcPackage.product.identifier);
+      const { customerInfo } = await Purchases.purchasePackage(rcPackage);
+      const isPremium = this.hasEntitlement(customerInfo);
+
+      if (isPremium) {
+        const amount = rcPackage.product.price;
+        const currency = rcPackage.product.currencyCode;
+
+        if (rcPackage.product.introPrice) {
+          MetaService.logStartTrial(rcPackage.product.identifier, amount, currency);
+        } else {
+          MetaService.logPurchase(amount, currency, rcPackage.product.identifier);
+        }
+
+        // Conversions are the events campaigns optimise against - send them
+        // immediately rather than waiting on the SDK's batch timer.
+        MetaService.flush();
+      }
+
+      return { success: true, isPremium };
     } catch (error: any) {
-      // User cancelled purchase
-      if (error.code === 'E_USER_CANCELLED') {
+      if (error?.userCancelled) {
         console.log('[IAP] User cancelled purchase');
-        return {
-          success: false,
-          isPremium: false,
-          error: 'Purchase cancelled',
-        };
+        return { success: false, isPremium: false, error: 'Purchase cancelled' };
       }
 
       console.error('[IAP] Purchase failed:', error);
       return {
         success: false,
         isPremium: false,
-        error: error.message || 'Purchase failed',
+        error: error?.message || 'Purchase failed',
       };
     }
   }
 
   static async checkPremiumStatus(): Promise<boolean> {
     try {
-      console.log('[IAP] Checking premium status...');
+      if (!this.isInitialized) await this.initialize();
 
-      const purchases = await RNIap.getAvailablePurchases();
-      console.log('[IAP] Found', purchases.length, 'purchases');
-
-      // Check if any of our subscription products are in the purchases
-      const hasPremium = purchases.some(
-        (purchase) =>
-          purchase.productId === PRODUCT_IDS.monthly ||
-          purchase.productId === PRODUCT_IDS.annual
-      );
-
-      console.log('[IAP] Premium status:', hasPremium);
-      return hasPremium;
+      const customerInfo = await Purchases.getCustomerInfo();
+      const isPremium = this.hasEntitlement(customerInfo);
+      console.log('[IAP] Premium status:', isPremium);
+      return isPremium;
     } catch (error) {
       console.error('[IAP] Error checking premium status:', error);
       return false;
@@ -182,94 +215,55 @@ export class IAPService {
 
   static async restorePurchases(): Promise<PurchaseResult> {
     try {
+      if (!this.isInitialized) await this.initialize();
+
       console.log('[IAP] Restoring purchases...');
-
-      const purchases = await RNIap.getAvailablePurchases();
-      console.log('[IAP] Restored', purchases.length, 'purchases');
-
-      // Check if any of our subscription products are in the restored purchases
-      const hasPremium = purchases.some(
-        (purchase) =>
-          purchase.productId === PRODUCT_IDS.monthly ||
-          purchase.productId === PRODUCT_IDS.annual
-      );
-
-      return {
-        success: true,
-        isPremium: hasPremium,
-      };
+      const customerInfo = await Purchases.restorePurchases();
+      return { success: true, isPremium: this.hasEntitlement(customerInfo) };
     } catch (error: any) {
       console.error('[IAP] Restore failed:', error);
       return {
         success: false,
         isPremium: false,
-        error: error.message || 'Restore failed',
+        error: error?.message || 'Restore failed',
       };
     }
   }
 
   static async loginUser(uid: string): Promise<void> {
-    console.log('[IAP] User login:', uid);
-    // Store user ID if needed for backend receipt validation
+    try {
+      if (!this.isInitialized) await this.initialize();
+
+      console.log('[IAP] Logging in RevenueCat user:', uid);
+      await Purchases.logIn(uid);
+      MetaService.setUserId(uid);
+    } catch (error) {
+      console.error('[IAP] Error logging in:', error);
+    }
   }
 
   static async logout(): Promise<void> {
-    console.log('[IAP] User logout');
-    // Clear any cached purchase data if needed
+    try {
+      if (!this.isInitialized) return;
+
+      await Purchases.logOut();
+      MetaService.setUserId(null);
+      this.packageCache.clear();
+      console.log('[IAP] Logged out');
+    } catch (error) {
+      console.error('[IAP] Error logging out:', error);
+    }
   }
 
   static async manageSubscription(): Promise<void> {
     try {
-      console.log('[IAP] Opening subscription management...');
-
-      if (Platform.OS === 'ios') {
-        // iOS: Open App Store subscription settings
-        const { Linking } = require('react-native');
-        await Linking.openURL('https://apps.apple.com/account/subscriptions');
-      } else {
-        // For Android, you'd typically open the Play Store subscriptions page
-        const { Linking } = require('react-native');
-        await Linking.openURL('https://play.google.com/store/account/subscriptions');
-      }
+      await Purchases.showManageSubscriptions();
     } catch (error) {
       console.error('[IAP] Error opening subscription management:', error);
     }
   }
 
-  static async endConnection(): Promise<void> {
-    try {
-      await RNIap.endConnection();
-      this.isInitialized = false;
-      console.log('[IAP] Connection closed');
-    } catch (error) {
-      console.error('[IAP] Error closing connection:', error);
-    }
-  }
-
-  private static getMockOfferings(): IAPPackage[] {
-    console.log('[IAP] Using mock offerings');
-    return [
-      {
-        identifier: PRODUCT_IDS.monthly,
-        title: '1 Month',
-        priceString: '$4.99',
-        isPopular: false,
-        period: '/mo',
-        billingText: 'Billed monthly',
-        freeTrialText: '7-day free trial',
-        productId: PRODUCT_IDS.monthly,
-      },
-      {
-        identifier: PRODUCT_IDS.annual,
-        title: '12 Months',
-        priceString: '$29.99',
-        isPopular: true,
-        period: '/year',
-        badge: 'SAVE 50%',
-        billingText: 'Billed yearly',
-        freeTrialText: '7-day free trial',
-        productId: PRODUCT_IDS.annual,
-      },
-    ];
+  private static hasEntitlement(customerInfo: CustomerInfo): boolean {
+    return typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
   }
 }

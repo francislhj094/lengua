@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { theme } from './src/core/theme';
 import { IAPService } from './src/services/iap';
+import { MetaService } from './src/services/meta';
 import * as Font from 'expo-font';
 import {
   Outfit_400Regular,
@@ -51,15 +52,29 @@ export default function App() {
         console.error('Font loading failed', e);
       }
 
+      setFontsLoaded(true);
+    }
+    loadFontsAndUpdates();
+
+    // SDK init runs independently of the OTA/font sequence. Chaining it behind
+    // the update check delayed the install event behind a network round trip,
+    // and a fetched update calls reloadAsync() - which killed the session
+    // before Meta ever initialized, so the install was never reported.
+    (async () => {
+      // Meta first: RevenueCat reads the Meta anonymous ID during its own
+      // configure step, which only works once the FB SDK is up.
+      try {
+        await MetaService.initialize();
+      } catch (e) {
+        console.error('Meta initialization failed', e);
+      }
+
       try {
         await IAPService.initialize();
       } catch (e) {
         console.error('IAP initialization failed', e);
       }
-
-      setFontsLoaded(true);
-    }
-    loadFontsAndUpdates();
+    })();
   }, []);
 
   if (!fontsLoaded) {

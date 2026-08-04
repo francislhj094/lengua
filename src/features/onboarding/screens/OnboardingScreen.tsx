@@ -23,6 +23,8 @@ export const OnboardingScreen = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
 
+  const completeOnboarding = () => navigation.replace('Auth');
+
   const progressStyle = useAnimatedStyle(() => {
     return {
       width: withTiming(`${((currentStep + 1) / 4) * 100}%`, { duration: 300 }),
@@ -38,7 +40,7 @@ export const OnboardingScreen = () => {
       case 2:
         return <PlacementScreen onNext={nextStep} key="step2" />;
       case 3:
-        return <CommitmentScreen onComplete={() => navigation.replace('Auth')} key="step3" />;
+        return <CommitmentScreen onComplete={completeOnboarding} key="step3" />;
       default:
         return null;
     }

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lengua: Learn Spanish Daily",
     "slug": "lengua",
-    "version": "1.2.0",
+    "version": "1.2.2",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -19,7 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.launchfast.lengua",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "5",
+      "buildNumber": "8",
       "entitlements": {
         "aps-environment": "production"
       },
@@ -43,6 +43,25 @@
           "ios": {
             "useFrameworks": "static"
           }
+        }
+      ],
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1408604651177934",
+          "clientToken": "17ee95b1faf684de42cf5a2817ffc71b",
+          "displayName": "Lengua",
+          "scheme": "fb1408604651177934",
+          "advertiserIDCollectionEnabled": true,
+          "autoLogAppEventsEnabled": false,
+          "isAutoInitEnabled": false,
+          "iosUserTrackingPermission": false
+        }
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Lengua uses this identifier to measure the performance of our ads and show you more relevant offers."
         }
       ]
     ],

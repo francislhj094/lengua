@@ -175,6 +175,13 @@ export class IAPService {
           ? formatDuration(intro.periodNumberOfUnits, intro.periodUnit)
           : null;
 
+        // Distinguishes "no offer configured in App Store Connect" from
+        // "offer exists but this customer is not eligible".
+        console.log(
+          `[IAP] ${product.identifier}: productHasIntroOffer=${!!product.introPrice}` +
+            ` customerGetsIntro=${!!intro} freeTrial=${isFreeTrial}`,
+        );
+
         return {
           hasFreeTrial: isFreeTrial,
           identifier: pkg.identifier,
@@ -229,6 +236,8 @@ export class IAPService {
         await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
 
       for (const [productId, entry] of Object.entries(eligibility)) {
+        // 0 = UNKNOWN, 1 = INELIGIBLE, 2 = ELIGIBLE
+        console.log(`[IAP] Intro eligibility ${productId}: status=${entry.status}`);
         result.set(
           productId,
           entry.status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE,

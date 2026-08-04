@@ -40,7 +40,5 @@ yarn-error.*
 /ios
 /android
 
-# environment variables
-.env
 functions/node_modules/
 functions/lib/

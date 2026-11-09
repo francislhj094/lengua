@@ -27,8 +27,21 @@ export class NotificationService {
     return finalStatus === 'granted';
   }
 
+  /**
+   * Asks for permission on first use, then schedules.
+   *
+   * The prompt used to fire from HomeScreen's mount effect, which put the iOS
+   * system dialog on top of onboarding and the paywall. It lives here instead:
+   * the only caller is lesson completion, so the ask lands after the user has
+   * finished something rather than before they've seen any value. iOS shows the
+   * dialog once ever, so calling this on every completion re-prompts nobody.
+   */
   static async scheduleRetentionReminders() {
     if (Platform.OS === 'web') return;
+
+    // Scheduling without permission silently produces reminders that never fire.
+    const granted = await this.requestPermissionsAsync();
+    if (!granted) return;
 
     // 1. Cancel all existing reminders first so we don't spam the user
     await Notifications.cancelAllScheduledNotificationsAsync();

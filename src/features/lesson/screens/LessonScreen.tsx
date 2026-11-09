@@ -107,7 +107,11 @@ export const LessonScreen = ({ route, navigation }: any) => {
         );
 
         // The one event Meta optimises campaigns against - see MetaService.logCompleteTutorial.
-        if (completedCount === 1) {
+        // Gated on a persisted flag rather than the count alone: replaying lesson one before
+        // finishing lesson two leaves the count at 1, which would fire the event again and
+        // inflate the signal the campaign is bidding against.
+        if (!useUserStore.getState().hasLoggedTutorial && completedCount >= 1) {
+          useUserStore.getState().markTutorialLogged();
           MetaService.logCompleteTutorial();
         }
 

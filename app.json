@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Lengua: Learn Spanish Daily",
+    "name": "Lengua: Learn Spanish",
     "slug": "lengua",
     "version": "1.2.2",
     "runtimeVersion": {
@@ -71,8 +71,7 @@
       }
     },
     "android": {
-      "package": "com.launchfast.lengua",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.launchfast.lengua"
     },
     "owner": "gublermaybellineus"
   }

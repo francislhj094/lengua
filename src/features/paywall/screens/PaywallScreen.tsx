@@ -18,11 +18,15 @@ const MOCK_PACKAGES: IAPPackage[] = [
   { identifier: 'annual', title: '12 Months', priceString: '—', isPopular: true, period: '/year', periodLabel: 'year', billingText: 'Billed yearly', hasFreeTrial: false, priceDisclosure: '', productId: '' },
 ];
 
+// Dialect leads: it is the one claim competitors can't copy, and it is what the
+// ads and the custom product pages promise. Burying it broke the message match
+// at the most expensive step in the funnel. The rest are phrased as outcomes -
+// at a paywall people are buying a version of themselves, not a content list.
 const FEATURES = [
-  { text: 'Full A1–B2 grammar curriculum', icon: BookOpen, color: '#3b82f6' },
-  { text: 'Offline mode for travel', icon: Plane, color: '#10b981' },
-  { text: 'Advanced pronunciation coaching', icon: Mic, color: '#f59e0b' },
-  { text: '500+ real-world cultural scenarios', icon: Globe, color: '#8b5cf6' }
+  { text: 'Spain or Latin American — you pick', icon: Globe, color: '#8b5cf6' },
+  { text: 'Order food, ask directions, small talk', icon: BookOpen, color: '#3b82f6' },
+  { text: 'Sound like a local, not a textbook', icon: Mic, color: '#f59e0b' },
+  { text: 'Practice offline — plane, subway, anywhere', icon: Plane, color: '#10b981' }
 ];
 
 export const PaywallScreen = ({ navigation }: any) => {

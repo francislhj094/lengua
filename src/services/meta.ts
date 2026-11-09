@@ -134,13 +134,23 @@ export class MetaService {
     }
   }
 
+  /**
+   * valueToSum is logEvent's second *positional* argument. Passing it inside the
+   * parameters object matches the logEvent(name, parameters) overload instead,
+   * which logs a custom key literally called "valueToSum" and leaves the event
+   * with no value - silently breaking value optimisation on StartTrial.
+   *
+   * fb_currency / fb_content_id are Meta's wire names for these parameters. The
+   * SDK exposes AppEventParams constants for them, but those come from a native
+   * getConstants() call that returns {} before the bridge is ready, and a throw
+   * in here would be swallowed by the catch and lose the conversion.
+   */
   static logStartTrial(productId: string, amount: number, currency: string): void {
     try {
-      console.log('[Meta] Logging trial start:', productId);
-      AppEventsLogger.logEvent('StartTrial', {
-        productId,
-        currency,
-        valueToSum: amount,
+      console.log('[Meta] Logging trial start:', productId, amount, currency);
+      AppEventsLogger.logEvent('StartTrial', amount, {
+        fb_currency: currency,
+        fb_content_id: productId,
       });
     } catch (error) {
       console.error('[Meta] Failed to log trial start:', error);
@@ -188,10 +198,9 @@ export class MetaService {
    */
   static logAddToCart(productId: string, amount: number, currency: string): void {
     try {
-      AppEventsLogger.logEvent('AddToCart', {
-        productId,
-        currency,
-        valueToSum: amount,
+      AppEventsLogger.logEvent('AddToCart', amount, {
+        fb_currency: currency,
+        fb_content_id: productId,
       });
     } catch (error) {
       console.error('[Meta] Failed to log plan selection:', error);

@@ -14,6 +14,7 @@ export interface UserGamificationState {
   weakWords: any[];
   freeLessonsUsed: number;
   hasRequestedReview: boolean;
+  hasLoggedTutorial: boolean;
   setPremium: (status: boolean) => void;
   setHasOnboarded: (status: boolean) => void;
   setDialect: (dialect: 'spain' | 'latin_american') => void;
@@ -26,6 +27,7 @@ export interface UserGamificationState {
   updateStreak: () => void;
   incrementFreeLessonsUsed: () => void;
   markReviewRequested: () => void;
+  markTutorialLogged: () => void;
 }
 
 export const useUserStore = create<UserGamificationState>()(
@@ -42,6 +44,7 @@ export const useUserStore = create<UserGamificationState>()(
   weakWords: [],
   freeLessonsUsed: 0,
   hasRequestedReview: false,
+  hasLoggedTutorial: false,
 
   setPremium: (status: boolean) => set({ isPremium: status }),
   setHasOnboarded: (status: boolean) => set({ hasOnboarded: status }),
@@ -79,6 +82,8 @@ export const useUserStore = create<UserGamificationState>()(
   })),
 
   markReviewRequested: () => set({ hasRequestedReview: true }),
+
+  markTutorialLogged: () => set({ hasLoggedTutorial: true }),
 
   updateStreak: () => {
     const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"

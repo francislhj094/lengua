@@ -7,7 +7,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useCourseStore } from '../../../store/useCourseStore';
 import { useUserStore } from '../../../store/useUserStore';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { NotificationService } from '../../../services/notifications';
 
 export const HomeScreen = () => {
   const navigation = useNavigation<any>();
@@ -24,10 +23,6 @@ export const HomeScreen = () => {
     }
     navigation.navigate('Lesson', { lessonId });
   };
-
-  useEffect(() => {
-    NotificationService.requestPermissionsAsync().catch(console.error);
-  }, []);
 
   let activeUnit = units[0];
   let activeLesson = units[0].lessons[0];
